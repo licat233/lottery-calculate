@@ -81,23 +81,13 @@ function App() {
   const [profitD, setProfitD] = useState<string>("0.00");
 
   const calculate = () => {
-    // let profit: Decimal
-
     //三种情况
     //case1：A队伍赢
-    // profit = getProfit(A)
     setProfitA(getProfit(A).toString());
-    // console.log("A队伍赢，收益：", profit.toNumber())
-
     //case2：B队伍赢
-    // profit = getProfit(B)
     setProfitB(getProfit(B).toString());
-    // console.log("B队伍赢，收益：", profit.toNumber())
-
     //case3：平局
-    // profit = getProfit(D)
     setProfitD(getProfit(D).toString());
-    // console.log("平局，收益：", profit.toNumber())
   }
 
   const showResult = () => {
@@ -119,7 +109,7 @@ function App() {
   const inputDrateRef = useRef<HTMLInputElement>(null);
   const inputDmoneyRef = useRef<HTMLInputElement>(null);
 
-  const inputOverEvent = (ref: React.RefObject<HTMLInputElement>, team: Team, setfn: React.Dispatch<React.SetStateAction<Team>>, typeName: string) => {
+  const inputOnChange = (ref: React.RefObject<HTMLInputElement>, team: Team, setfn: React.Dispatch<React.SetStateAction<Team>>, typeName: string) => {
     const value = ref.current ? ref.current.value : "0.00";
     // const pattern = /^(\-|\+)?\d+(\.)?(\d+)?$/
     const pattern = /^(-|\+)?\d+\.$/
@@ -137,7 +127,7 @@ function App() {
   const showInput = (ref: React.RefObject<HTMLInputElement>, value: string) => {
     if (ref.current) {
       ref.current.style.display = "inline-block";
-      ref.current.value = value  //保留两位小数
+      ref.current.value = new Decimal(value).toString()  //常规
       setTimeout(() => {
         ref.current?.focus()
       });
@@ -180,9 +170,9 @@ function App() {
       return <tr key={index}>
         <td>{item.name}</td>
         <td><div key={"rate-" + index} onMouseDown={() => { showInput(rateRef, rate) }}>{rate}
-          <input type="text" ref={rateRef} onKeyUp={(e) => { enterEvent(e, rateRef) }} onChange={() => { inputOverEvent(rateRef, item, setf, "rate") }} onFocus={() => { formatInput(rateRef, rate) }} onBlur={() => { hideInput(rateRef) }} /></div></td>
+          <input type="text" ref={rateRef} onKeyUp={(e) => { enterEvent(e, rateRef) }} onChange={() => { inputOnChange(rateRef, item, setf, "rate") }} onFocus={() => { formatInput(rateRef, rate) }} onBlur={() => { hideInput(rateRef) }} /></div></td>
         <td><div key={"money-" + index} onMouseDown={() => { showInput(moneyRef, money) }}>{money}
-          <input type="text" ref={moneyRef} onKeyUp={(e) => { enterEvent(e, moneyRef) }} onChange={() => { inputOverEvent(moneyRef, item, setf, "money") }} onFocus={() => { formatInput(moneyRef, money) }} onBlur={() => { hideInput(moneyRef) }} /></div></td>
+          <input type="text" ref={moneyRef} onKeyUp={(e) => { enterEvent(e, moneyRef) }} onChange={() => { inputOnChange(moneyRef, item, setf, "money") }} onFocus={() => { formatInput(moneyRef, money) }} onBlur={() => { hideInput(moneyRef) }} /></div></td>
         <td><div>{CashPrize(item).toFixed(2, Decimal.ROUND_DOWN)}</div></td>
         <td><div>{SingleProfit(item).toFixed(2, Decimal.ROUND_DOWN)} </div></td>
       </tr>
