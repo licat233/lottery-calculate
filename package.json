@@ -2,6 +2,7 @@
   "name": "lottery",
   "version": "0.1.0",
   "private": true,
+  "homepage": "./",
   "dependencies": {
     "@better-scroll/core": "^2.5.0",
     "@better-scroll/slide": "^2.5.0",
