@@ -52,3 +52,5 @@ a=A胜，b=B胜，c=平局
 ⑨ Bb ≥ Cc ≥ Aa
 ```
 
+## view
+<https://licat233.github.io/lottery-calculate/index.html>
