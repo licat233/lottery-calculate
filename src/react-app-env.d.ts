@@ -1,5 +1,6 @@
 /// <reference types="react-scripts" />
 interface Team {
+    id: number
     name: string
     money: Decimal
     rate: Decimal
@@ -12,6 +13,7 @@ interface Teams {
 }
 
 interface CacheTeam {
+    id: number
     name: string
     money: string
     rate: string

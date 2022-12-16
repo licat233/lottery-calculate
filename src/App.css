@@ -42,12 +42,52 @@
 .App-body {
   word-wrap: break-word;
   min-height: 100vh;
-  padding: 20px 0;
+  padding: 20px 10px;
   box-sizing: border-box;
 }
 
 .App-body-1 {
   margin-bottom: 50px;
+}
+
+.base-rules div {
+  display: block;
+  max-width: 600px;
+  width: 100%;
+  margin: 20px auto 50px;
+  border-top: 1px solid rgb(182, 182, 182);
+  text-align: left;
+}
+
+.base-rules div button {
+  text-align: left;
+  text-decoration: none;
+  border-radius: 3px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  -o-border-radius: 3px;
+  border: 1px solid #d6d6d6;
+  color: #61dafb;
+  transition: .2s;
+  -webkit-transition: .2s;
+  -moz-transition: .2s;
+  -ms-transition: .2s;
+  -o-transition: .2s;
+  background-color: ghostwhite;
+}
+
+.base-rules div button:active {
+  transform: scale(.9);
+  -webkit-transform: scale(.9);
+  -moz-transform: scale(.9);
+  -ms-transform: scale(.9);
+  -o-transform: scale(.9);
+}
+
+.base-rules ul li {
+  font-family: monospace;
+  font-size: 18px;
 }
 
 .text-align-left {
@@ -64,7 +104,7 @@
 }
 
 .App-body-table {
-  max-width: 600px;
+  max-width: 700px;
   margin: 0 auto 50px;
   border-collapse: collapse;
   box-sizing: border-box;
@@ -108,7 +148,7 @@ td {
   width: 100px;
 }
 
-.App-body-table td div{
+.App-body-table td div {
   position: relative;
   height: 40px;
   line-height: 40px;
@@ -140,7 +180,7 @@ td {
 
 .App-body-table td div input:focus {
   /* outline: #545862 solid 1px; */
-  border-bottom:2px solid #61dafb;
+  border-bottom: 2px solid #61dafb;
 }
 
 .calculate-box {
@@ -198,13 +238,14 @@ td {
   font-size: 14px;
 }
 
-ul{
+ul {
   margin: 0 auto;
   max-width: 600px;
   padding: 0;
 }
 
-ul,li{
-list-style: none;
-width: 100%;
+ul,
+li {
+  list-style: none;
+  width: 100%;
 }

@@ -2,6 +2,9 @@ import './App.css';
 import Decimal from 'decimal.js';
 import { useEffect, useRef, useState } from 'react';
 import ScrollReveal from 'scrollreveal'
+import tippy, { Instance, Props } from 'tippy.js';
+import 'tippy.js/dist/tippy.css';
+import 'tippy.js/animations/scale.css';
 
 function App() {
   useEffect(() => {
@@ -12,23 +15,20 @@ function App() {
   })
 
   const defaultData: Teams = {
-    A: NewTeam("A胜", "0.00", "1.000"),
-    B: NewTeam("B胜", "0.00", "1.000"),
-    D: NewTeam("平局", "0.00", "1.000")
+    A: NewTeam(1, "A胜", "0.00", "1.000"),
+    B: NewTeam(2, "B胜", "0.00", "1.000"),
+    D: NewTeam(3, "平局", "0.00", "1.000")
   }
 
   const assignTeamValue = (team: Team, cache: CacheTeam) => {
-    team.name = cache.name;
-    team.rate = new Decimal(cache.rate);
-    team.money = new Decimal(cache.money);
+    cache.id && (team.id = cache.id)
+    cache.name && (team.name = cache.name)
+    cache.rate && (team.rate = new Decimal(cache.rate))
+    cache.money && (team.money = new Decimal(cache.money))
   }
 
   const TeamToCache = (team: Team): CacheTeam => {
-    return {
-      name: team.name,
-      rate: team.rate.toFixed(3, Decimal.ROUND_DOWN),
-      money: team.money.toFixed(2, Decimal.ROUND_DOWN)
-    }
+    return { ...team, rate: team.rate.toFixed(3, Decimal.ROUND_DOWN), money: team.money.toFixed(2, Decimal.ROUND_DOWN) }
   }
 
   const setCacheData = (team: Teams) => {
@@ -90,18 +90,6 @@ function App() {
     setProfitD(getProfit(D).toString());
   }
 
-  const showResult = () => {
-    return <>
-      <div>
-        <ul>
-          <li>如果{A.name}胜，总收益：<span>{profitA}</span></li>
-          <li>如果{B.name}胜，总收益：<span>{profitB}</span></li>
-          <li>如果{D.name}，总收益：<span>{profitD}</span></li>
-        </ul>
-      </div>
-    </>
-  }
-
   const inputArateRef = useRef<HTMLInputElement>(null);
   const inputAmoneyRef = useRef<HTMLInputElement>(null);
   const inputBrateRef = useRef<HTMLInputElement>(null);
@@ -109,19 +97,36 @@ function App() {
   const inputDrateRef = useRef<HTMLInputElement>(null);
   const inputDmoneyRef = useRef<HTMLInputElement>(null);
 
-  const inputOnChange = (ref: React.RefObject<HTMLInputElement>, team: Team, setfn: React.Dispatch<React.SetStateAction<Team>>, typeName: string) => {
-    const value = ref.current ? ref.current.value : "0.00";
+  const handleInputValue = (ref: React.RefObject<HTMLInputElement>): string => {
+    let value = ref.current ? ref.current.value : "0.00";
+    if (!ref.current) return value
+    value = value.replaceAll("。", ".")
+    value = value.replaceAll("、", ".")
+    value = value.replaceAll("，", ".")
+    ref.current.value = value
+    return value
+  }
+
+  const inputOnChange = (ref: React.RefObject<HTMLInputElement>, team: Team, setfn: React.Dispatch<React.SetStateAction<Team>>) => {
+    const value = handleInputValue(ref)
     // const pattern = /^(\-|\+)?\d+(\.)?(\d+)?$/
+    handleInputValue(ref)
     const pattern = /^(-|\+)?\d+\.$/
     if (pattern.test(value)) {
       return
     }
-    const res = new Decimal(Number(value) || 0);
+    const typeName = ref.current?.dataset.name
     if (typeName === "rate") {
+      let res = new Decimal(Number(value) || 1);
+      if (res.toNumber() === 0) {
+        res = new Decimal("1.000")
+      }
       setfn({ ...team, rate: res })
     } else if (typeName === "money") {
+      const res = new Decimal(Number(value) || 0);
       setfn({ ...team, money: res })
     }
+    calculate()
   }
 
   const showInput = (ref: React.RefObject<HTMLInputElement>, value: string) => {
@@ -130,15 +135,25 @@ function App() {
       ref.current.value = new Decimal(value).toString()  //常规
       setTimeout(() => {
         ref.current?.focus()
+        if (ref.current?.dataset.name === "money") {
+          setTippyContent(ref)
+        }
       });
     }
   }
 
+  //输入完成之后的核心事件
   const hideInput = (ref: React.RefObject<HTMLInputElement>) => {
     if (ref.current) {
       ref.current.style.display = "none";
     }
-    setCacheData({ A, B, D })
+    // setA(A)
+    // setB(B)
+    // setD(D)
+    setTimeout(() => {
+      setCacheData({ A, B, D })
+    })
+    calculate()
   }
 
   const enterEvent = (e: any, ref: React.RefObject<HTMLInputElement>) => {
@@ -161,22 +176,182 @@ function App() {
     const sets = [setA, setB, setD];
     const rateRefs = [inputArateRef, inputBrateRef, inputDrateRef];
     const moneyRefs = [inputAmoneyRef, inputBmoneyRef, inputDmoneyRef];
+    const profits = [profitA, profitB, profitD];
     return list.map((item, index) => {
       const rateRef = rateRefs[index];
       const moneyRef = moneyRefs[index];
       const setf = sets[index];
       const rate = new Decimal(item.rate).toFixed(3, Decimal.ROUND_DOWN)
       const money = new Decimal(item.money).toFixed(2, Decimal.ROUND_DOWN)
+      const profit = profits[index]
       return <tr key={index}>
         <td>{item.name}</td>
         <td><div key={"rate-" + index} onMouseDown={() => { showInput(rateRef, rate) }}>{rate}
-          <input type="text" ref={rateRef} onKeyUp={(e) => { enterEvent(e, rateRef) }} onChange={() => { inputOnChange(rateRef, item, setf, "rate") }} onFocus={() => { formatInput(rateRef, rate) }} onBlur={() => { hideInput(rateRef) }} /></div></td>
+          <input data-id={item.id} data-name="rate" type="text" ref={rateRef} onKeyUp={(e) => { enterEvent(e, rateRef) }} onChange={() => { inputOnChange(rateRef, item, setf) }} onFocus={() => { formatInput(rateRef, rate) }} onBlur={() => { hideInput(rateRef) }} /></div></td>
         <td><div key={"money-" + index} onMouseDown={() => { showInput(moneyRef, money) }}>{money}
-          <input type="text" ref={moneyRef} onKeyUp={(e) => { enterEvent(e, moneyRef) }} onChange={() => { inputOnChange(moneyRef, item, setf, "money") }} onFocus={() => { formatInput(moneyRef, money) }} onBlur={() => { hideInput(moneyRef) }} /></div></td>
+          <input data-id={item.id} data-name="money" type="text" ref={moneyRef} onKeyUp={(e) => { enterEvent(e, moneyRef) }} onChange={() => { inputOnChange(moneyRef, item, setf) }} onFocus={() => { formatInput(moneyRef, money) }} onBlur={() => { hideInput(moneyRef) }} /></div></td>
         <td><div>{CashPrize(item).toFixed(2, Decimal.ROUND_DOWN)}</div></td>
         <td><div>{SingleProfit(item).toFixed(2, Decimal.ROUND_DOWN)} </div></td>
+        <td><div>{profit}</div></td>
       </tr>
     })
+  }
+
+  const addInputTippy = (ref: React.RefObject<HTMLInputElement>, content: string) => {
+    const el = ref.current as Element;
+    const res = tippy(el, {
+      // default
+      arrow: true,
+      content: content,
+      animation: 'scale',
+      hideOnClick: false,
+    });
+    return res
+  }
+
+  const tipA = useRef<unknown>(null)
+  const tipB = useRef<unknown>(null)
+  const tipD = useRef<unknown>(null)
+
+  let isFirstLoad = useRef<boolean>(true)
+  useEffect(() => {
+    if (!isFirstLoad.current) return
+    isFirstLoad.current = false
+    calculate()  //渲染完成后，计算一次
+    tipA.current = addInputTippy(inputAmoneyRef, defaultContent);
+    tipB.current = addInputTippy(inputBmoneyRef, defaultContent);
+    tipD.current = addInputTippy(inputDmoneyRef, defaultContent);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const toDippy = (item: unknown) => {
+    return item as Instance<Props>
+  }
+
+  //提示逻辑
+  //赔率最大者，优先配置money
+  const decimalToNumber = (num: Decimal): number => {
+    return num.toNumber()
+  }
+
+  // const teamList = useRef<group[]>([newGroup(A, setA), newGroup(B, setB), newGroup(D, setD)]);
+  const teamList = useRef<Team[]>([A, B, D]);
+
+  const resetTeamList = () => {
+    teamList.current = [A, B, D]
+  }
+
+  const sortTeamList = () => {
+    teamList.current.sort((a, b) => {
+      return decimalToNumber(a.rate) - decimalToNumber(b.rate)
+    })
+  }
+
+  //检查数据是否已经设置好，设置好才能开启tip
+  const dataVerify = (ref: React.RefObject<HTMLInputElement>): boolean => {
+    const list = [A, B, D];
+    const moneyRefs = [inputAmoneyRef, inputBmoneyRef, inputDmoneyRef];
+    let count = 0;
+    list.forEach((item, index) => {
+      if (moneyRefs[index] === ref) {
+        //不管当前是不是0，如果另外两个是0.则当前为默认提示
+        return
+      }
+      if (new Decimal(item.money).toNumber() === 0) {
+        count += 1
+      }
+    })
+    if (count >= 2) { //有两个以上都为0
+      return false
+    }
+    return true
+  }
+
+
+  const defaultContent = "请下注";
+
+  const getMaxContent = () => {
+    const minDec = CashPrize(teamList.current[1])
+    if (minDec.toNumber() === 0) {
+      return defaultContent
+    }
+    const min = minDec.div(teamList.current[2].rate).toFixed(2, Decimal.ROUND_DOWN)
+    return `当前值 ≥ ${min}`
+  }
+
+  const getMidContent = () => {
+    const maxDec = CashPrize(teamList.current[2])
+    const minDec = CashPrize(teamList.current[0])
+    const max = maxDec.div(teamList.current[1].rate).toFixed(2, Decimal.ROUND_DOWN)
+    const min = minDec.div(teamList.current[1].rate).toFixed(2, Decimal.ROUND_DOWN)
+    if (maxDec.toNumber() === 0 && minDec.toNumber() === 0) {
+      return defaultContent;
+    } else if (maxDec.toNumber() === 0) {
+      return `当前值 ≥ ${min}`
+    } else if (minDec.toNumber() === 0) {
+      return `${max} ≥ 当前值`
+    } else {
+      return `${max} ≥ 当前值 ≥ ${min}`
+    }
+  }
+
+  const getMinContent = () => {
+    const maxDec = CashPrize(teamList.current[1])
+    if (maxDec.toNumber() === 0) {
+      return defaultContent
+    }
+    const max = maxDec.div(teamList.current[0].rate).toFixed(2, Decimal.ROUND_DOWN)
+    return `${max} ≥ 当前值`
+  }
+
+
+  const setTippyContent = (ref: React.RefObject<HTMLInputElement>) => {
+    if (!ref.current) return
+    resetTeamList() //必须重新初始化数据
+    sortTeamList() //开始前，需要排序一下
+    const ok = dataVerify(ref)
+    const id = ref.current.dataset.id;
+    teamList.current.forEach((team, index) => {
+      if (ref.current && String(team.id) === id) {
+        let msg = ""
+        switch (true) {
+          case new Decimal(team.rate).toNumber() === 0:
+            msg = "请先设置赔率";
+            break;
+          case !ok:
+            msg = defaultContent;
+            break
+          case index === 0:
+            msg = getMinContent();
+            break
+          case index === 1:
+            msg = getMidContent();
+            break
+          case index === 2:
+            msg = getMaxContent();
+            break
+          default:
+            msg = defaultContent;
+            break;
+        }
+        switch (id) {
+          case "1":
+            toDippy(tipA.current).setContent(msg)
+            break
+          case "2":
+            toDippy(tipB.current).setContent(msg)
+            break
+          case "3":
+            toDippy(tipD.current).setContent(msg)
+            break
+        }
+      }
+    })
+  }
+
+  const resetData = () => {
+    localStorage.removeItem("teams");
+    window.location.reload();
   }
 
   return (
@@ -186,6 +361,42 @@ function App() {
       </header>
       <article className='App-body'>
         <section className='App-body-1'>
+          <div className='base-rules'>
+            <h3>基本公式</h3>
+            <ul>
+              <li>Aa ≥ Bb ≥ Cc</li>
+              <li>Cc ≥ Aa ≥ Bb</li>
+              <li>Bb ≥ Cc ≥ Aa</li>
+            </ul>
+            <br />
+            <div><button onClick={resetData}>reset</button></div>
+          </div>
+          <table className='App-body-table'>
+            <thead>
+              <tr>
+                <th>下注</th>
+                <th>赔率</th>
+                <th>金额</th>
+                <th>兑奖</th>
+                <th>收益</th>
+                <th>总收益</th>
+              </tr>
+            </thead>
+            <tbody>
+              {renderTr()}
+            </tbody>
+          </table>
+          {/* <div>
+            {showResult()}
+          </div> */}
+          <div className='calculate-box'>
+            <button className='calculate-btn' onClick={calculate}>
+              计算
+            </button>
+          </div>
+
+        </section>
+        <section className='App-body-2'>
           <h3>计算过程</h3>
           <p>
             设金额：A={A.name}，B={B.name}，C={D.name} <br /> 设赔率：a={A.name}，b={B.name}，c={D.name}
@@ -222,31 +433,7 @@ function App() {
           </p>
         </section>
 
-        <section className='App-body-1'>
-          <table className='App-body-table'>
-            <thead>
-              <tr>
-                <th>下注</th>
-                <th>赔率</th>
-                <th>金额</th>
-                <th>兑奖</th>
-                <th>收益</th>
-              </tr>
-            </thead>
-            <tbody>
-              {renderTr()}
-            </tbody>
-          </table>
-          <div>
-            {showResult()}
-          </div>
-          <div className='calculate-box'>
-            <button className='calculate-btn' onClick={calculate}>
-              计算
-            </button>
-          </div>
 
-        </section>
       </article>
 
       <footer className='footer'>
@@ -258,11 +445,12 @@ function App() {
 }
 
 //新建
-function NewTeam(name: string, money: Decimal.Value, rate: Decimal.Value): Team {
+function NewTeam(id: number, name: string, money: Decimal.Value, rate: Decimal.Value): Team {
   return {
+    id: id,
     name: name,
     money: new Decimal(money),
-    rate: new Decimal(rate)
+    rate: new Decimal(rate),
   }
 }
 
