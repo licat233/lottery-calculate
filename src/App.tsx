@@ -194,10 +194,10 @@ function App() {
       const toatlProfit = profits[index]
       return <tr key={index}>
         <td>{item.name}</td>
-        <td><div key={"rate-" + index} onMouseDown={() => { showInput(rateRef, rate) }}>{rate}
+        <td><div key={"rate-" + index} onClick={() => { showInput(rateRef, rate) }}>{rate}
           <input maxLength={8} data-id={item.id} data-name="rate" type="text" ref={rateRef} onKeyUp={(e) => { enterEvent(e, rateRef) }}
             onChange={() => { inputOnChange(rateRef, item, setf) }} onFocus={() => { formatInput(rateRef, rate) }} onBlur={() => { hideInput(rateRef) }} /></div></td>
-        <td><div key={"money-" + index} onMouseDown={() => { showInput(moneyRef, money) }}>{money}
+        <td><div key={"money-" + index} onClick={() => { showInput(moneyRef, money) }}>{money}
           <input maxLength={10} data-id={item.id} data-name="money" type="text" ref={moneyRef} onKeyUp={(e) => { enterEvent(e, moneyRef) }}
             onChange={() => { inputOnChange(moneyRef, item, setf) }} onFocus={() => { formatInput(moneyRef, money) }} onBlur={() => { hideInput(moneyRef) }} /></div></td>
         <td><div>{CashPrize(item).toFixed(2, Decimal.ROUND_DOWN)}</div></td>
@@ -461,7 +461,7 @@ function App() {
             <tfoot>
               <tr className='ttotal'>
                 <td>总金额</td>
-                <td colSpan={5}><div onMouseDown={showTotalInput}>{totalMoney.toFixed(2, Decimal.ROUND_DOWN)}
+                <td colSpan={5}><div onClick={showTotalInput}>{totalMoney.toFixed(2, Decimal.ROUND_DOWN)}
                   <input maxLength={10} type="text" ref={totalRef} onFocus={() => { formatInput(totalRef, totalMoney.toFixed(2, Decimal.ROUND_DOWN)) }} onChange={changeTotalInput} onBlur={hideTotalInput} /></div></td>
               </tr>
             </tfoot>
