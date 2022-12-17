@@ -29,12 +29,12 @@ function NewTeam(index: number, name: string, money: number, rate: number): Team
 
 //兑奖
 function getCashPrize(item: Team): Decimal {
-    return new Decimal(item.money).mul(new Decimal(item.rate));
+    return new Decimal(item.money).mul(item.rate);
 }
 
 //收益
 function getProfit(item: Team): Decimal {
-    return getCashPrize(item).sub(new Decimal(item.money));
+    return getCashPrize(item).sub(item.money);
 }
 
 const getCacheData = (): CacheData | null => {
@@ -111,9 +111,6 @@ const getTeamList = (teams: Teams): Team[] => {
     return teamList
 }
 
-
-
-
 function App() {
     useEffect(() => {
         let sr = ScrollReveal({ reset: true });
@@ -127,6 +124,7 @@ function App() {
     const [teams, setTeams] = useState<Teams>(initTeamsData);
     const [totalMoney, setTotalMoney] = useState<number>(cacheData?.total || 100);
     const totalRef = useRef<HTMLInputElement>(null);
+    const assignBtnTip = useRef<any>(null);
 
     const tippyArr = useRef<Instance<Props>[]>([]);
 
@@ -142,6 +140,14 @@ function App() {
             animation: 'scale',
             hideOnClick: false,
         });
+        const assignBtnE = document.querySelector(".assign-btn");
+        assignBtnE && (assignBtnTip.current = tippy(assignBtnE, {
+            // default
+            arrow: true,
+            content: "请先reset表单数据",
+            animation: 'scale',
+            hideOnClick: false,
+        }));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -156,13 +162,19 @@ function App() {
         if (typeName === "rate") {
             //只允许输入3位小数点
             const s = new Decimal(value).toFixed(3, Decimal.ROUND_DOWN)
-            const num = new Decimal(s).toNumber()
+            let num = new Decimal(s).toNumber()
+            if (num >= 100) {
+                num = 100
+            }
             el.value = new Decimal(num).toString()
             team.rate = num
         } else if (typeName === "money") {
             //只允许输入2位小数点
             const s = new Decimal(value).toFixed(2, Decimal.ROUND_DOWN)
-            const num = new Decimal(s).toNumber()
+            let num = new Decimal(s).toNumber()
+            if (num >= 100000) {
+                num = 100000
+            }
             el.value = new Decimal(num).toString()
             team.money = num
         } else {
@@ -213,21 +225,26 @@ function App() {
         const team = findTeam(id)
         switch (name) {
             case 'money':
-                el.value = new Decimal(team?.money || 0).toString()
+                let moneyV = new Decimal(team?.money || 0).toFixed(2, Decimal.ROUND_DOWN)
+                moneyV = new Decimal(moneyV).toNumber().toString()
+                el.value = moneyV
                 setTippyContent(el)
                 break
             case 'rate':
-                el.value = new Decimal(team?.rate || 1).toString()
+                let rateV = new Decimal(team?.rate || 1).toFixed(3, Decimal.ROUND_DOWN)
+                rateV = new Decimal(rateV).toNumber().toString()
+                el.value = rateV
                 setTippyContent(el)
                 break
             case 'total':
-                el.value = new Decimal(totalMoney).toFixed(2, Decimal.ROUND_DOWN)
+                // console.log(totalMoney)
+                el.value = new Decimal(totalMoney.toFixed(2)).toNumber().toString()
                 break
             default:
         }
     }
 
-    const changeTotalInput = (el: HTMLInputElement) => {
+    const totalInputChange = (el: HTMLInputElement) => {
         const value = getInputValue(el)
         if (value.length === 0) return
         const pattern = /^(\+)?\d+\.$/
@@ -236,7 +253,12 @@ function App() {
         }
         //只允许输入2位小数点
         const s = new Decimal(value).toFixed(2, Decimal.ROUND_DOWN)
-        const num = new Decimal(s).toNumber()
+        let num = new Decimal(s).toNumber()
+        if (num >= 100000) {
+            num = 100000
+        } else if (num <= 0) {
+            num = 1
+        }
         el.value = new Decimal(num).toString()
         setTotalMoney(num)
     }
@@ -247,7 +269,6 @@ function App() {
             <div onClick={(e) => { showInput(e.currentTarget) }} >
                 {rateVal}
                 <input type="number" maxLength={8} max={100} data-id={team.id} data-name="rate" data-value="1.000"
-                    // value={rateVal}
                     onKeyUp={(e) => { onKeyUp(e) }}
                     onChange={(e) => { onChange(e.target, team) }}
                     onFocus={(e) => { onFocus(e.target) }}
@@ -263,7 +284,6 @@ function App() {
             <div onClick={(e) => { showInput(e.currentTarget) }} >
                 {moneyVal}
                 <input type="number" maxLength={8} max={100000} data-id={team.id} data-name="money" data-value="1.00"
-                    // value={moneyVal}
                     onKeyUp={(e) => { onKeyUp(e) }}
                     onChange={(e) => { onChange(e.target, team) }}
                     onFocus={(e) => { onFocus(e.target) }}
@@ -293,10 +313,9 @@ function App() {
             <td>总金额</td>
             <td colSpan={5}><div onClick={(e) => { showInput(e.currentTarget) }}>
                 {value}
-                <input maxLength={10} type="text" ref={totalRef} data-name="total"
-                    value={value}
+                <input type="number" maxLength={10} max={100000} ref={totalRef} data-name="total"
                     onKeyUp={(e) => { onKeyUp(e) }}
-                    onChange={(e) => { changeTotalInput(e.target) }}
+                    onChange={(e) => { totalInputChange(e.target) }}
                     onFocus={(e) => { onFocus(e.target) }}
                     onBlur={(e) => { hideInput(e.target) }}
                 />
@@ -366,7 +385,7 @@ function App() {
         const id = el.dataset.id;
         if (!id) return
         teamArr.some((team, index) => {
-            const eq = team.id === id
+            const eq = id && team.id === id
             if (eq) {  //找出当前team对应的HTMLInputElement
                 let msg = ""
                 switch (true) {
@@ -413,27 +432,87 @@ function App() {
             window.location.reload()
             return
         }
+        const tip = assignBtnTip.current as Instance<Props>
+        tip.disable()
         setTotalMoney(100)
         setTeams({ ...cpTeams })
     }
 
-    const assignMoney = (teams: Teams) => {
-        const a_b = new Decimal(teams.A.rate).div(new Decimal(teams.B.rate))
-        const a_c = new Decimal(teams.A.rate).div(new Decimal(teams.C.rate))
-        const b_a = new Decimal(teams.B.rate).div(new Decimal(teams.A.rate))
-        const b_c = new Decimal(teams.B.rate).div(new Decimal(teams.C.rate))
-        const c_a = new Decimal(teams.C.rate).div(new Decimal(teams.A.rate))
-        const c_b = new Decimal(teams.C.rate).div(new Decimal(teams.B.rate))
+    //核心分配算法，分配三个
+    const assignMoney3 = () => {
+        const a_b = new Decimal(teams.A.rate).div(teams.B.rate)
+        const a_c = new Decimal(teams.A.rate).div(teams.C.rate)
+        const b_a = new Decimal(teams.B.rate).div(teams.A.rate)
+        const b_c = new Decimal(teams.B.rate).div(teams.C.rate)
+        const c_a = new Decimal(teams.C.rate).div(teams.A.rate)
+        const c_b = new Decimal(teams.C.rate).div(teams.B.rate)
 
-        const av = new Decimal(totalMoney).div(new Decimal(1).add(a_b).add(a_c)).toNumber()
-        const bv = new Decimal(totalMoney).div(new Decimal(b_a).add(1).add(b_c)).toNumber()
-        const cv = new Decimal(totalMoney).div(new Decimal(c_a).add(c_b).add(1)).toNumber()
+        const av = new Decimal(totalMoney).div(new Decimal(1).add(a_b).add(a_c))
+        const bv = new Decimal(totalMoney).div(new Decimal(b_a).add(1).add(b_c))
+        const cv = new Decimal(totalMoney).div(new Decimal(c_a).add(c_b).add(1))
 
-        teams.A.money = av
-        teams.B.money = bv
-        teams.C.money = cv
+        if (av.isFinite()) {
+            teams.A.money = av.toNumber()
+        }
+        if (bv.isFinite()) {
+            teams.B.money = bv.toNumber()
+        }
+        if (cv.isFinite()) {
+            teams.C.money = cv.toNumber()
+        }
 
         setTeams({ ...teams })
+    }
+
+    const assignMoney2 = (samll: Team, large: Team) => {
+        const a = large.rate
+        const b = samll.rate
+        // M ≥ A ≥ M(2-b)/(a-b)
+        const A = new Decimal(totalMoney).mul(new Decimal(2).sub(b)).div(new Decimal(a).sub(b))
+        const B = new Decimal(totalMoney).sub(A)
+        if (A.isFinite() || B.isFinite()) {
+            let moneyA = A.toNumber()
+            let moneyB = B.toNumber()
+            if (A.greaterThanOrEqualTo(totalMoney)) {
+                moneyA = totalMoney;
+            } else if (A.lessThanOrEqualTo(0)) {
+                moneyA = 1
+            }
+            if (B.greaterThanOrEqualTo(totalMoney)) {
+                moneyB = totalMoney - 1;
+            } else if (B.lessThanOrEqualTo(0)) {
+                moneyB = 1;
+            }
+            large.money = moneyA
+            samll.money = moneyB
+        } else {
+            large.money = new Decimal(totalMoney).div(2).toNumber()
+            samll.money = new Decimal(totalMoney).sub(large.money).toNumber()
+        }
+
+        setTeams({ ...teams })
+    }
+
+    const assignMoney = () => {
+        if (totalMoney < 1) return
+        const noZeroArr: Team[] = []
+        getTeamArr(teams).forEach((team) => {
+            if (team.money !== 0) {
+                noZeroArr.push(team)
+            }
+        })
+        const tip = assignBtnTip.current as Instance<Props>
+        //当2个都不为0时，执行2分配方案
+        if (noZeroArr.length === 2) {
+            tip.disable()
+            assignMoney2(noZeroArr[0], noZeroArr[1])
+        } else if (noZeroArr.length === 0) { //当全部都为0时，执行3分配方案
+            tip.disable()
+            assignMoney3()
+        } else {
+            tip.enable()
+            tip.show()
+        }
     }
 
     return (
@@ -485,7 +564,7 @@ function App() {
                                     <button className='reset-btn' onClick={resetData}>reset</button>
                                 </div>
                                 <div className='assign'>
-                                    <button className='assign-btn' onClick={() => { assignMoney(teams) }}>
+                                    <button className='assign-btn' onClick={assignMoney}>
                                         assign
                                     </button>
                                 </div>
@@ -541,16 +620,40 @@ function App() {
                     </p>
 
                     <h3>求各注的金额</h3>
-                    A + Aa/b + Aa/c = M
-                    <br /> Bb/a + B + Bb/c = M
-                    <br /> Cc/a + Cc/b + C = M
+                    <p>
+                        A + Aa/b + Aa/c = M
+                        <br /> Bb/a + B + Bb/c = M
+                        <br /> Cc/a + Cc/b + C = M
+                    </p>
 
-                    <h3>资金分配方案</h3>
-                    A = M/(1 + a/b + a/c)
-                    <br />
-                    B = M/(b/a + 1 + b/c)
-                    <br />
-                    C = M/(c/a + c/b + 1)
+                    <h3>资金分配三注方案</h3>
+                    <p>
+                        A = M/(1 + a/b + a/c)
+                        <br />
+                        B = M/(b/a + 1 + b/c)
+                        <br />
+                        C = M/(c/a + c/b + 1)
+                    </p>
+
+                    <h3>资金分配两注方案</h3>
+                    <p>
+                        M = A + B
+                        <br />Aa - A - B ≥ 0 <br />  =&gt;&gt; Aa - A - M + A ≥ 0 <br /> =&gt;&gt; Aa ≥ M
+                        <br />
+                        <br />Bb - B - A ≥ 0 <br />  =&gt;&gt; Bb - B - M + B ≥ 0 <br /> =&gt;&gt; Bb ≥ M
+                        <br />
+                        <br />Aa + Bb ≥ 2M
+                        <br />Aa + Mb - Ab ≥ 2M
+                        <br />A(a-b) ≥ M(2-b)
+                        <br />
+                        <br />则: M ≥ A ≥ M(2-b)/(a-b)
+                        <br />
+                        <br />M - B ≥ M(2-b)/(a-b)
+                        <br /> 0  ≤ B ≤ M - M(2-b)/(a-b)
+                        <br />
+                        <br />则: 0  ≤ B ≤ A
+                    </p>
+
                     <br />
                     <br />
                 </section>

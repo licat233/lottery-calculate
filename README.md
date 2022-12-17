@@ -74,6 +74,23 @@ B = M/(b/a + 1 + b/c)
 C = M/(c/a + c/b + 1)
 ```
 
+## 同理，如果只分配2个
+```
+M = A + B
+Aa - A - B ≥ 0  =>> Aa - A - M + A ≥ 0 =>> Aa ≥ M
+Bb - B - A ≥ 0  =>> Bb - B - M + B ≥ 0 =>> Bb ≥ M
+
+Aa + Bb ≥ 2M  
+Aa + Mb - Ab ≥ 2M  
+A(a-b) ≥ M(2-b)  
+
+则: M ≥ A ≥ M(2-b)/(a-b)
+
+M - B ≥ M(2-b)/(a-b) 
+0  ≤ B ≤ M - M(2-b)/(a-b)   
+
+则: 0  ≤ B ≤ A  
+```
 
 ## web
 <https://licat233.github.io/lottery-calculate/index.html>
