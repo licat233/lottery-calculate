@@ -1,26 +1,22 @@
 /// <reference types="react-scripts" />
 interface Team {
-    id: number
+    [key: string]: string | number; //string类型的索引签名
+    id: string
+    index: number
     name: string
-    money: Decimal
-    rate: Decimal
+    money: number
+    rate: number
 }
 
 interface Teams {
-    A: Team,
-    B: Team,
-    D: Team
+    [key: string]: Team; //string类型的索引签名
+    A: Team;
+    B: Team;
+    C: Team;
 }
 
-interface CacheTeam {
-    id: number
-    name: string
-    money: string
-    rate: string
-}
-
-interface CacheTeams {
-    A: CacheTeam,
-    B: CacheTeam,
-    D: CacheTeam
+interface CacheData {
+    [key: string]: CacheTeams | number; //string类型的索引签名
+    teams: Teams
+    total: number;
 }

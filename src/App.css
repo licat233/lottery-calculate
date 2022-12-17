@@ -5,13 +5,6 @@
 .App {
   text-align: center;
   box-sizing: border-box;
-  font-family: monospace;
-  font-size: 16px;
-}
-
-input {
-  font-family: monospace;
-  font-size: 16px;
 }
 
 .App-logo {
@@ -123,6 +116,11 @@ input {
   white-space: nowrap;
 }
 
+.table-box {
+  max-width: 100%;
+  overflow: auto;
+}
+
 .App-body-table {
   width: 100%;
   margin: 0 auto 50px;
@@ -161,35 +159,22 @@ td {
 }
 
 .App-body-table tr td {
+  /* width: 16%; */
+  max-width: 100px;
+  overflow: auto;
   border: none;
-  word-break: keep-all;
-  overflow-x: auto;
-  overflow-y: hidden;
   letter-spacing: 0px;
   line-height: inherit;
+  word-break: keep-all;
+  white-space: nowrap;
+  /* padding: 0 10px; */
 }
 
 .App-body-table tr th {
-  word-break: keep-all;
-  width: 100px;
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-.App-body-table tr th:nth-of-type(1) {
-  width: 100px;
-}
-
-.App-body-table tr th:nth-of-type(2) {
-  width: 100px;
-}
-
-.App-body-table tr th:nth-of-type(3) {
-  width: 100px;
-}
-
-.App-body-table tr th:nth-of-type(4) {
-  width: 100px;
+  width: 16%;
+  max-width: 100px;
+  overflow: auto;
+  white-space: nowrap;
 }
 
 /* .App-body-table tbody tr.ttotal {
@@ -200,7 +185,9 @@ td {
 .App-body-table td div {
   position: relative;
   height: 100%;
+  width: 100%;
   line-height: inherit;
+  white-space: nowrap;
 }
 
 .App-body-table td div input {
