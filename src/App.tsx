@@ -490,14 +490,13 @@ function App() {
             总预算：M
             <br />设金额：A={A.name}，B={B.name}，C={D.name}
             <br /> 设赔率：a={A.name}，b={B.name}，c={D.name}
-
           </p>
 
-          <h3>列方程式</h3>
+          <h3>方程式</h3>
           <p>
-            如果{A.name}赢：
+            如果{A.name}：
             <br />① Aa - A - B - C ≥ 0<br />&nbsp;=&gt;&gt;&nbsp;  A(a-1) ≥ B + C
-            <br /> 如果{B.name}赢：
+            <br /> 如果{B.name}：
             <br /> ② Bb - A - B - C ≥ 0<br /> &nbsp;=&gt;&gt;&nbsp; B(b-1) ≥ A + C
             <br /> 如果{D.name}：
             <br /> ③ Cc - A - B - C ≥ 0<br /> &nbsp;=&gt;&gt;&nbsp; C(c-1) ≥ A + B
