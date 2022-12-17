@@ -1,6 +1,17 @@
+:root {
+  --content-max-width: 600px;
+}
+
 .App {
   text-align: center;
   box-sizing: border-box;
+  font-family: monospace;
+  font-size: 16px;
+}
+
+input {
+  font-family: monospace;
+  font-size: 16px;
 }
 
 .App-logo {
@@ -40,23 +51,33 @@
 }
 
 .App-body {
+  width: 100%;
   word-wrap: break-word;
   min-height: 100vh;
-  padding: 20px 10px;
+  padding: 10px;
   box-sizing: border-box;
 }
 
-.App-body-1 {
-  margin-bottom: 50px;
+.App-body .content {
+  margin: 0 auto;
+  padding-bottom: 50px;
+  border-bottom: 1px solid #afafaf;
+  max-width: var(--content-max-width);
 }
 
-.base-rules div {
+.base-rules div.line {
   display: block;
-  max-width: 600px;
   width: 100%;
-  margin: 20px auto 50px;
+  margin: 5px auto 0;
   border-top: 1px solid rgb(182, 182, 182);
+  border-bottom: 1px solid rgb(182, 182, 182);
   text-align: left;
+  height: 1px;
+  margin-bottom: 40px;
+}
+
+.base-rules h3 {
+  margin-bottom: 5px;
 }
 
 .base-rules div button {
@@ -67,14 +88,16 @@
   -moz-border-radius: 3px;
   -ms-border-radius: 3px;
   -o-border-radius: 3px;
-  border: 1px solid #d6d6d6;
+  border: 1px solid #61dafb;
   color: #61dafb;
   transition: .2s;
   -webkit-transition: .2s;
   -moz-transition: .2s;
   -ms-transition: .2s;
   -o-transition: .2s;
-  background-color: ghostwhite;
+  background-color: #282c34;
+  font-size: 16px;
+  box-shadow: 0 0 3px 0px #61dafb;
 }
 
 .base-rules div button:active {
@@ -83,11 +106,8 @@
   -moz-transform: scale(.9);
   -ms-transform: scale(.9);
   -o-transform: scale(.9);
-}
-
-.base-rules ul li {
-  font-family: monospace;
-  font-size: 18px;
+  border: 1px solid #ffffff;
+  box-shadow: 0 0 4px 1px #61dafb;
 }
 
 .text-align-left {
@@ -104,7 +124,7 @@
 }
 
 .App-body-table {
-  max-width: 700px;
+  width: 100%;
   margin: 0 auto 50px;
   border-collapse: collapse;
   box-sizing: border-box;
@@ -120,16 +140,40 @@ td {
 }
 
 .App-body-table thead tr {
+  border-top: 1px solid;
+  border-bottom: 1px solid;
+  height: 30px;
+  line-height: 30px;
+}
+
+.App-body-table tbody tr {
+  border-bottom: 1px dotted;
+  letter-spacing: -8px;
+  height: 40px;
+  line-height: 40px;
+}
+
+.App-body-table tfoot tr {
+  height: 30px;
+  line-height: 30px;
+  border-top: 1px solid;
   border-bottom: 1px solid;
 }
 
-.App-body-table tbody tr td {
-  border-bottom: 1px dotted;
-  height: 40px;
+.App-body-table tr td {
+  border: none;
+  word-break: keep-all;
+  overflow-x: auto;
+  overflow-y: hidden;
+  letter-spacing: 0px;
+  line-height: inherit;
 }
 
 .App-body-table tr th {
+  word-break: keep-all;
   width: 100px;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .App-body-table tr th:nth-of-type(1) {
@@ -148,10 +192,15 @@ td {
   width: 100px;
 }
 
+/* .App-body-table tbody tr.ttotal {
+  height: 30px;
+  line-height: 30px;
+} */
+
 .App-body-table td div {
   position: relative;
-  height: 40px;
-  line-height: 40px;
+  height: 100%;
+  line-height: inherit;
 }
 
 .App-body-table td div input {
@@ -178,26 +227,52 @@ td {
   border-color: inherit;
 }
 
-.App-body-table td div input:focus {
-  /* outline: #545862 solid 1px; */
-  border-bottom: 2px solid #61dafb;
+.App-body-table thead tr th:nth-of-type(1) {
+  border-right: 1px solid;
 }
 
-.calculate-box {
+.App-body-table tbody tr td:nth-of-type(1) {
+  border-right: 1px dotted;
+}
+
+.App-body-table tfoot tr td:nth-of-type(1) {
+  border-right: 1px solid;
+}
+
+
+.App-body-table td div input:focus {
+  outline: #61dafb solid 1px !important;
+}
+
+.tools {
   width: 100%;
-  padding: 0;
-  height: 100px;
+}
+
+.tools-box {
+  margin: 0 auto;
+  width: 100%;
+}
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.reset,
+.assign {
   display: flex;
   justify-content: center;
-  vertical-align: middle;
   align-items: center;
+  padding: 0;
 }
 
-.calculate-btn {
+.assign-btn,
+.reset-btn {
   width: 100px;
-  max-height: 40px;
-  padding: 5px 10px;
-  font-size: large;
+  height: 30px;
+  line-height: 30px;
+  padding: 0;
+  font-size: 18px;
   color: #282c34;
   border-radius: 5px;
   -webkit-border-radius: 5px;
@@ -212,12 +287,14 @@ td {
   -moz-transition: all .2s;
   -ms-transition: all .2s;
   -o-transition: all .2s;
-  letter-spacing: 5px;
+  letter-spacing: 1px;
   text-align: center;
-  font-family: monospace;
+  user-select: none;
+  cursor: pointer;
 }
 
-.calculate-btn:active {
+.assign-btn:active,
+.reset-btn:active {
   transform: scale(.9);
   -webkit-transform: scale(.9);
   -moz-transform: scale(.9);
@@ -240,7 +317,7 @@ td {
 
 ul {
   margin: 0 auto;
-  max-width: 600px;
+  max-width: 100%;
   padding: 0;
 }
 

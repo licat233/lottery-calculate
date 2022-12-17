@@ -15,10 +15,13 @@ function App() {
   })
 
   const defaultData: Teams = {
-    A: NewTeam(1, "A胜", "0.00", "1.000"),
-    B: NewTeam(2, "B胜", "0.00", "1.000"),
+    A: NewTeam(1, "甲胜", "0.00", "1.000"),
+    B: NewTeam(2, "乙胜", "0.00", "1.000"),
     D: NewTeam(3, "平局", "0.00", "1.000")
   }
+
+  const [totalMoney, setTotalMoney] = useState<Decimal>(new Decimal(100));
+  const totalRef = useRef<HTMLInputElement>(null);
 
   const assignTeamValue = (team: Team, cache: CacheTeam) => {
     cache.id && (team.id = cache.id)
@@ -31,11 +34,11 @@ function App() {
     return { ...team, rate: team.rate.toFixed(3, Decimal.ROUND_DOWN), money: team.money.toFixed(2, Decimal.ROUND_DOWN) }
   }
 
-  const setCacheData = (team: Teams) => {
+  const setCacheData = () => {
     const cachedata: CacheTeams = {
-      A: TeamToCache(team.A),
-      B: TeamToCache(team.B),
-      D: TeamToCache(team.D)
+      A: TeamToCache(A),
+      B: TeamToCache(B),
+      D: TeamToCache(D)
     }
     localStorage.setItem("teams", JSON.stringify(cachedata))
   }
@@ -83,11 +86,15 @@ function App() {
   const calculate = () => {
     //三种情况
     //case1：A队伍赢
-    setProfitA(getProfit(A).toString());
+    setProfitA(getProfit(A).toFixed(2, Decimal.ROUND_DOWN));
     //case2：B队伍赢
-    setProfitB(getProfit(B).toString());
+    setProfitB(getProfit(B).toFixed(2, Decimal.ROUND_DOWN));
     //case3：平局
-    setProfitD(getProfit(D).toString());
+    setProfitD(getProfit(D).toFixed(2, Decimal.ROUND_DOWN));
+
+    setTimeout(() => {
+      setCacheData()
+    })
   }
 
   const inputArateRef = useRef<HTMLInputElement>(null);
@@ -110,7 +117,6 @@ function App() {
   const inputOnChange = (ref: React.RefObject<HTMLInputElement>, team: Team, setfn: React.Dispatch<React.SetStateAction<Team>>) => {
     const value = handleInputValue(ref)
     // const pattern = /^(\-|\+)?\d+(\.)?(\d+)?$/
-    handleInputValue(ref)
     const pattern = /^(-|\+)?\d+\.$/
     if (pattern.test(value)) {
       return
@@ -121,12 +127,17 @@ function App() {
       if (res.toNumber() === 0) {
         res = new Decimal("1.000")
       }
-      setfn({ ...team, rate: res })
+      team.rate = res
     } else if (typeName === "money") {
       const res = new Decimal(Number(value) || 0);
-      setfn({ ...team, money: res })
+      team.money = res
     }
-    calculate()
+
+    setfn(team)
+
+    setTimeout(() => {
+      calculate()
+    })
   }
 
   const showInput = (ref: React.RefObject<HTMLInputElement>, value: string) => {
@@ -147,13 +158,10 @@ function App() {
     if (ref.current) {
       ref.current.style.display = "none";
     }
-    // setA(A)
-    // setB(B)
-    // setD(D)
-    setTimeout(() => {
-      setCacheData({ A, B, D })
-    })
     calculate()
+    setTimeout(() => {
+      setCacheData()
+    })
   }
 
   const enterEvent = (e: any, ref: React.RefObject<HTMLInputElement>) => {
@@ -183,16 +191,18 @@ function App() {
       const setf = sets[index];
       const rate = new Decimal(item.rate).toFixed(3, Decimal.ROUND_DOWN)
       const money = new Decimal(item.money).toFixed(2, Decimal.ROUND_DOWN)
-      const profit = profits[index]
+      const toatlProfit = profits[index]
       return <tr key={index}>
         <td>{item.name}</td>
         <td><div key={"rate-" + index} onMouseDown={() => { showInput(rateRef, rate) }}>{rate}
-          <input data-id={item.id} data-name="rate" type="text" ref={rateRef} onKeyUp={(e) => { enterEvent(e, rateRef) }} onChange={() => { inputOnChange(rateRef, item, setf) }} onFocus={() => { formatInput(rateRef, rate) }} onBlur={() => { hideInput(rateRef) }} /></div></td>
+          <input maxLength={8} data-id={item.id} data-name="rate" type="text" ref={rateRef} onKeyUp={(e) => { enterEvent(e, rateRef) }}
+            onChange={() => { inputOnChange(rateRef, item, setf) }} onFocus={() => { formatInput(rateRef, rate) }} onBlur={() => { hideInput(rateRef) }} /></div></td>
         <td><div key={"money-" + index} onMouseDown={() => { showInput(moneyRef, money) }}>{money}
-          <input data-id={item.id} data-name="money" type="text" ref={moneyRef} onKeyUp={(e) => { enterEvent(e, moneyRef) }} onChange={() => { inputOnChange(moneyRef, item, setf) }} onFocus={() => { formatInput(moneyRef, money) }} onBlur={() => { hideInput(moneyRef) }} /></div></td>
+          <input maxLength={10} data-id={item.id} data-name="money" type="text" ref={moneyRef} onKeyUp={(e) => { enterEvent(e, moneyRef) }}
+            onChange={() => { inputOnChange(moneyRef, item, setf) }} onFocus={() => { formatInput(moneyRef, money) }} onBlur={() => { hideInput(moneyRef) }} /></div></td>
         <td><div>{CashPrize(item).toFixed(2, Decimal.ROUND_DOWN)}</div></td>
         <td><div>{SingleProfit(item).toFixed(2, Decimal.ROUND_DOWN)} </div></td>
-        <td><div>{profit}</div></td>
+        <td><div>{toatlProfit}</div></td>
       </tr>
     })
   }
@@ -351,30 +361,95 @@ function App() {
 
   const resetData = () => {
     localStorage.removeItem("teams");
-    window.location.reload();
+    setA(NewTeam(1, "甲胜", "0.00", "1.000"))
+    setB(NewTeam(2, "乙胜", "0.00", "1.000"))
+    setD(NewTeam(3, "平局", "0.00", "1.000"))
+    setProfitA("0.00")
+    setProfitB("0.00")
+    setProfitD("0.00")
+  }
+
+  const showTotalInput = () => {
+    if (totalRef.current) {
+      totalRef.current.value = totalMoney.toFixed(2, Decimal.ROUND_DOWN)
+      totalRef.current.style.display = "inline-block";
+      setTimeout(() => {
+        totalRef.current?.focus();
+      })
+    }
+  }
+
+  const hideTotalInput = () => {
+    if (totalRef.current) {
+      totalRef.current.style.display = "none";
+    }
+  }
+
+  const changeTotalInput = () => {
+    if (totalRef.current) {
+      const value = handleInputValue(totalRef)
+      const pattern = /^(\+)?\d+\.$/
+      if (pattern.test(value)) {
+        return
+      }
+      setTotalMoney(new Decimal(value))
+    }
+  }
+
+  // const isAllZero = (): boolean => {
+  //   return [A, B, D].every(({ rate, money }) => {
+  //     const ok1 = new Decimal(rate).toNumber() === 1
+  //     const ok2 = new Decimal(money).isZero()
+  //     return ok1 && ok2
+  //   })
+  // }
+
+  const assignMoney = () => {
+    const a_b = new Decimal(A.rate).div(new Decimal(B.rate))
+    const a_d = new Decimal(A.rate).div(new Decimal(D.rate))
+    const b_a = new Decimal(B.rate).div(new Decimal(A.rate))
+    const b_d = new Decimal(B.rate).div(new Decimal(D.rate))
+    const d_a = new Decimal(D.rate).div(new Decimal(A.rate))
+    const d_b = new Decimal(D.rate).div(new Decimal(B.rate))
+
+    const av = totalMoney.div(new Decimal(1).add(a_b).add(a_d))
+    const bv = totalMoney.div(new Decimal(b_a).add(1).add(b_d))
+    const dv = totalMoney.div(new Decimal(d_a).add(d_b).add(1))
+    A.money = av
+    B.money = bv
+    D.money = dv
+    setA(A)
+    setB(B)
+    setD(D)
+    calculate()
   }
 
   return (
-    <div className="App">
+    <div className="App background">
       <header className="App-header">
         彩票购买方案
       </header>
       <article className='App-body'>
-        <section className='App-body-1'>
+        <section className='content'>
           <div className='base-rules'>
-            <h3>基本公式</h3>
+            <h3>核心规则</h3>
             <ul>
               <li>Aa ≥ Bb ≥ Cc</li>
               <li>Cc ≥ Aa ≥ Bb</li>
               <li>Bb ≥ Cc ≥ Aa</li>
             </ul>
-            <br />
-            <div><button onClick={resetData}>reset</button></div>
+            <h3>资金分配规则</h3>
+            <ul>
+              <li>A = M/(1 + a/b + a/c)</li>
+              <li>B = M/(b/a + 1 + b/c)</li>
+              <li>C = M/(c/a + c/b + 1)</li>
+            </ul>
+            <div className='line'></div>
           </div>
           <table className='App-body-table'>
             <thead>
-              <tr>
-                <th>下注</th>
+              <tr className='tnav'>
+                <th>竞猜</th>
                 <th>赔率</th>
                 <th>金额</th>
                 <th>兑奖</th>
@@ -385,52 +460,90 @@ function App() {
             <tbody>
               {renderTr()}
             </tbody>
+            <tfoot>
+              <tr className='ttotal'>
+                <td>总金额</td>
+                <td colSpan={5}><div onMouseDown={showTotalInput}>{totalMoney.toFixed(2, Decimal.ROUND_DOWN)}
+                  <input maxLength={10} type="text" ref={totalRef} onChange={changeTotalInput} onBlur={hideTotalInput} /></div></td>
+              </tr>
+            </tfoot>
           </table>
-          {/* <div>
-            {showResult()}
-          </div> */}
-          <div className='calculate-box'>
-            <button className='calculate-btn' onClick={calculate}>
-              计算
-            </button>
+          <div className='tools'>
+            <div className='tools-box'>
+              <div className='tools-grid'>
+                <div className='reset'>
+                  <button className='reset-btn' onClick={resetData}>reset</button>
+                </div>
+                <div className='assign'>
+                  <button className='assign-btn' onClick={assignMoney}>
+                    assign
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
         </section>
-        <section className='App-body-2'>
-          <h3>计算过程</h3>
+        <section className='content'>
+          <h3>设</h3>
           <p>
-            设金额：A={A.name}，B={B.name}，C={D.name} <br /> 设赔率：a={A.name}，b={B.name}，c={D.name}
+            总预算：M
+            <br />设金额：A={A.name}，B={B.name}，C={D.name}
+            <br /> 设赔率：a={A.name}，b={B.name}，c={D.name}
+
           </p>
 
           <h3>列方程式</h3>
           <p>
             如果{A.name}赢：
-            <br />① Aa - A - B - C ≥ 0 &nbsp;=&gt;&gt;&nbsp;  A(a-1) ≥ B + C
+            <br />① Aa - A - B - C ≥ 0<br />&nbsp;=&gt;&gt;&nbsp;  A(a-1) ≥ B + C
             <br /> 如果{B.name}赢：
-            <br /> ② Bb - A - B - C ≥ 0 &nbsp;=&gt;&gt;&nbsp; B(b-1) ≥ A + C
+            <br /> ② Bb - A - B - C ≥ 0<br /> &nbsp;=&gt;&gt;&nbsp; B(b-1) ≥ A + C
             <br /> 如果{D.name}：
-            <br /> ③ Cc - A - B - C ≥ 0 &nbsp;=&gt;&gt;&nbsp; C(c-1) ≥ A + B
+            <br /> ③ Cc - A - B - C ≥ 0<br /> &nbsp;=&gt;&gt;&nbsp; C(c-1) ≥ A + B
+            <br /> 总预算：
+            <br /> ④ A + B + C = M
           </p>
 
           <h3>化简</h3>
           <p>
             将 ① - ② 得：
-            ④ Aa ≥ Bb
+            ⑤ Aa ≥ Bb
+            <br /> =&gt;&gt; A ≥ Bb/a
+            <br /> =&gt;&gt;  Aa/b ≥ B
             <br /> 将 ② - ③ 得：
-            ⑤ Bb ≥ Cc
+            ⑥ Bb ≥ Cc
+            <br /> =&gt;&gt; B ≥ Cc/b
+            <br /> =&gt;&gt;  Bb/c ≥ C
             <br /> 将 ③ - ① 得：
-            ⑥ Cc ≥ Aa
+            ⑦ Cc ≥ Aa
+            <br /> =&gt;&gt; C ≥ Aa/c
+            <br /> =&gt;&gt;  Cc/a ≥ A
           </p>
 
           <h3>最终解</h3>
           <p>
-            将 ④ 与 ⑤ 组合得：
-            ⑦ Aa ≥ Bb ≥ Cc
-            <br /> 将 ④ 与 ⑥ 组合得：
-            ⑧ Cc ≥ Aa ≥ Bb
-            <br /> 将 ⑤ 与 ⑥ 组合得：
-            ⑨ Bb ≥ Cc ≥ Aa
+            将 ⑤ 与 ⑥ 组合得：
+            ⑧ Aa ≥ Bb ≥ Cc
+            <br /> 将 ⑤ 与 ⑦ 组合得：
+            ⑨ Cc ≥ Aa ≥ Bb
+            <br /> 将 ⑥ 与 ⑦ 组合得：
+            ⑩ Bb ≥ Cc ≥ Aa
           </p>
+
+          <h3>求各注的金额</h3>
+          A + Aa/b + Aa/c = M
+          <br /> Bb/a + B + Bb/c = M
+          <br /> Cc/a + Cc/b + C = M
+
+          <h3>资金分配方案</h3>
+          A = M/(1 + a/b + a/c)
+          <br />
+          B = M/(b/a + 1 + b/c)
+          <br />
+          C = M/(c/a + c/b + 1)
+          <br />
+          <br />
         </section>
 
 

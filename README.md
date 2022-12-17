@@ -1,9 +1,9 @@
 # 彩票计算 - lottery calculate
 
-## 计算过程
+## 设
 设金额：
 ```
-A=A胜，B=B胜，C=平局  
+A=A胜，B=B胜，C=平局，M=总预算 
 ```
 设赔率：
 ```
@@ -23,34 +23,57 @@ a=A胜，b=B胜，c=平局
 ```
 ③ Cc - A - B - C ≥ 0  =>>  C(c-1) ≥ A + B
 ```
+总预算：
+```
+④ A + B + C = M
+```
 
 ## 化简
 将 ① - ② 得： 
 ```
-④ Aa ≥ Bb
+⑤ Aa ≥ Bb =>> A ≥ Bb/a  =>>  Aa/b ≥ B
 ```
 将 ② - ③ 得： 
 ```
-⑤ Bb ≥ Cc
+⑥ Bb ≥ Cc =>> B ≥ Cc/b  =>>  Bb/c ≥ C
 ```
 将 ③ - ① 得： 
 ```
-⑥ Cc ≥ Aa
+⑦ Cc ≥ Aa =>> C ≥ Aa/c  =>>  Cc/a ≥ A
 ```
 
 ## 最终解
-将 ④ 与 ⑤ 组合得：
+将 ⑤ 与 ⑥ 组合得：
 ```
- ⑦ Aa ≥ Bb ≥ Cc
+⑧ Aa ≥ Bb ≥ Cc
 ```
-将 ④ 与 ⑥ 组合得： 
+将 ⑤ 与 ⑦ 组合得： 
 ```
-⑧ Cc ≥ Aa ≥ Bb
+⑨ Cc ≥ Aa ≥ Bb
 ```
-将 ⑤ 与 ⑥ 组合得： 
+将 ⑥ 与 ⑦ 组合得： 
 ```
-⑨ Bb ≥ Cc ≥ Aa
+⑩ Bb ≥ Cc ≥ Aa
 ```
 
-## view
+## 求各注的金额
+```
+A + Aa/b + Aa/c = M
+
+Bb/a + B + Bb/c = M 
+
+Cc/a + Cc/b + C = M 
+```
+
+## 资金分配方案
+```
+A = M/(1 + a/b + a/c)
+
+B = M/(b/a + 1 + b/c)
+
+C = M/(c/a + c/b + 1)
+```
+
+
+## web
 <https://licat233.github.io/lottery-calculate/index.html>
