@@ -9,13 +9,20 @@ document.oncontextmenu = function () {
   return false;
 };
 
+function UI() {
+  if (window.location.host !== 'licat233.github.io') {
+    return <></>
+  }
+  return <App />
+}
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 
 root.render(
   <React.StrictMode>
-    <App />
+    <UI />
   </React.StrictMode>
 );
 
