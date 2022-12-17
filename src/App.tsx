@@ -371,7 +371,7 @@ function App() {
 
   const showTotalInput = () => {
     if (totalRef.current) {
-      totalRef.current.value = totalMoney.toFixed(2, Decimal.ROUND_DOWN)
+      totalRef.current.value = totalMoney.toString()
       totalRef.current.style.display = "inline-block";
       setTimeout(() => {
         totalRef.current?.focus();
@@ -382,6 +382,12 @@ function App() {
   const hideTotalInput = () => {
     if (totalRef.current) {
       totalRef.current.style.display = "none";
+      const value = handleInputValue(totalRef)
+      const pattern = /^(\+)?\d+\.$/
+      if (pattern.test(value)) {
+        return
+      }
+      setTotalMoney(new Decimal(value))
     }
   }
 
@@ -395,14 +401,6 @@ function App() {
       setTotalMoney(new Decimal(value))
     }
   }
-
-  // const isAllZero = (): boolean => {
-  //   return [A, B, D].every(({ rate, money }) => {
-  //     const ok1 = new Decimal(rate).toNumber() === 1
-  //     const ok2 = new Decimal(money).isZero()
-  //     return ok1 && ok2
-  //   })
-  // }
 
   const assignMoney = () => {
     const a_b = new Decimal(A.rate).div(new Decimal(B.rate))
@@ -464,7 +462,7 @@ function App() {
               <tr className='ttotal'>
                 <td>总金额</td>
                 <td colSpan={5}><div onMouseDown={showTotalInput}>{totalMoney.toFixed(2, Decimal.ROUND_DOWN)}
-                  <input maxLength={10} type="text" ref={totalRef} onChange={changeTotalInput} onBlur={hideTotalInput} /></div></td>
+                  <input maxLength={10} type="text" ref={totalRef} onFocus={() => { formatInput(totalRef, totalMoney.toFixed(2, Decimal.ROUND_DOWN)) }} onChange={changeTotalInput} onBlur={hideTotalInput} /></div></td>
               </tr>
             </tfoot>
           </table>

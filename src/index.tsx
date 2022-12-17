@@ -10,9 +10,9 @@ document.oncontextmenu = function () {
 };
 
 function UI() {
-  if (window.location.host !== 'licat233.github.io') {
-    return <></>
-  }
+  // if (window.location.host !== 'licat233.github.io') {
+  //   return <></>
+  // }
   return <App />
 }
 
