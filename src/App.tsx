@@ -141,9 +141,9 @@ const getUrlDate = (name: string): string[] => {
 }
 
 const setTeamRate = (team: Team, rate: string) => {
-    const value = new Decimal(rate)
-    if (value.isNaN()) return
-    team.rate = value.toNumber()
+    const value = Number(rate)
+    if (Number.isNaN(value)) return
+    team.rate = value
 }
 
 const mergeInitData = (cacheData: CacheData | null) => {
