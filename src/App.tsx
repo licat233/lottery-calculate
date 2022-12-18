@@ -5,6 +5,7 @@ import ScrollReveal from 'scrollreveal';
 import tippy, { Instance, Props } from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/animations/scale.css';
+import Article from './article';
 
 const cacheKey = "data202212"
 const defaultContent = "请下注";
@@ -54,6 +55,16 @@ const setCacheData = (teams: Teams, total: number) => {
     localStorage.setItem(cacheKey, JSON.stringify(cachedata))
 }
 
+const noZeroArr = (teams: Teams): Team[] => {
+    const arr: Team[] = []
+    getTeamArr(teams).forEach((team) => {
+        if (team.money !== 0) {
+            arr.push(team)
+        }
+    })
+    return arr
+}
+
 //获取所有的消耗
 const getAllCharge = (teams: Teams): Decimal => {
     let all = new Decimal(0);
@@ -65,9 +76,18 @@ const getAllCharge = (teams: Teams): Decimal => {
 }
 
 //获取总收益
-const getAllProfit = (teams: Teams, item: Team): Decimal => {
+const getAllProfit = (teams: Teams, team: Team): Decimal => {
+    const arr = noZeroArr(teams)
+    if (arr.length === 2) {
+        const has = arr.some((_team) => {
+            return _team.id === team.id
+        })
+        if (!has) {
+            return new Decimal(0)
+        }
+    }
     let allCharge: Decimal = getAllCharge(teams)
-    let cashPrize: Decimal = getCashPrize(item)
+    let cashPrize: Decimal = getCashPrize(team)
     //奖金 - 投入 = 收益
     return cashPrize.sub(allCharge)
 }
@@ -124,9 +144,18 @@ function App() {
     const [teams, setTeams] = useState<Teams>(initTeamsData);
     const [totalMoney, setTotalMoney] = useState<number>(cacheData?.total || 100);
     const totalRef = useRef<HTMLInputElement>(null);
-    const assignBtnTip = useRef<any>(null);
+    // const assignBtnTip = useRef<any>(null);
 
     const tippyArr = useRef<Instance<Props>[]>([]);
+
+    const assignMod = useRef<number>(0)
+    const assignModSwitch = () => {
+        const modNum = 2 //总共有模式数量
+        assignMod.current += 1
+        if (assignMod.current === modNum) {
+            assignMod.current = 0
+        }
+    }
 
     let isFirstLoad = useRef<boolean>(true)
     useEffect(() => {
@@ -135,19 +164,21 @@ function App() {
         const moneyInputs = document.querySelectorAll("input[data-name=money]");
         tippyArr.current = tippy(moneyInputs, {
             // default
+            placement: "right",
             arrow: true,
             content: defaultContent,
             animation: 'scale',
             hideOnClick: false,
         });
-        const assignBtnE = document.querySelector(".assign-btn");
-        assignBtnE && (assignBtnTip.current = tippy(assignBtnE, {
-            // default
-            arrow: true,
-            content: "请先reset表单数据",
-            animation: 'scale',
-            hideOnClick: false,
-        }));
+        // const assignBtnE = document.querySelector(".assign-btn");
+        // assignBtnE && (assignBtnTip.current = tippy(assignBtnE, {
+        //     // default
+        //     placement: "bottom",
+        //     arrow: true,
+        //     content: "请先reset表单数据",
+        //     animation: 'scale',
+        //     hideOnClick: false,
+        // }));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -172,11 +203,22 @@ function App() {
             //只允许输入2位小数点
             const s = new Decimal(value).toFixed(2, Decimal.ROUND_DOWN)
             let num = new Decimal(s).toNumber()
-            if (num >= 100000) {
-                num = 100000
+            if (num >= totalMoney) {
+                num = totalMoney
             }
             el.value = new Decimal(num).toString()
             team.money = num
+            //更改了当前，则其它也要变
+            const arr = noZeroArr(teams)
+            if (arr.length === 2) {
+                const otherTeam = arr.find((_team) => {
+                    return _team.id !== team.id
+                })
+                if (otherTeam) {
+                    const otherV = new Decimal(totalMoney).sub(num).toNumber()
+                    otherTeam.money = otherV
+                }
+            }
         } else {
             return
         }
@@ -237,7 +279,6 @@ function App() {
                 setTippyContent(el)
                 break
             case 'total':
-                // console.log(totalMoney)
                 el.value = new Decimal(totalMoney.toFixed(2)).toNumber().toString()
                 break
             default:
@@ -353,6 +394,11 @@ function App() {
     }
 
     const getMidContent = (teamArr: Team[]) => {
+        const arr = noZeroArr(teams)
+        if (arr.length === 2) {
+            const min = new Decimal(totalMoney).div(arr[0].rate).toFixed(2, Decimal.ROUND_DOWN)
+            return `${totalMoney} ≥ 当前值 ≥ ${min}`
+        }
         const maxDec = getCashPrize(teamArr[2])
         const minDec = getCashPrize(teamArr[0])
         const max = maxDec.div(teamArr[1].rate).toFixed(2, Decimal.ROUND_DOWN)
@@ -369,6 +415,11 @@ function App() {
     }
 
     const getMinContent = (teamArr: Team[]) => {
+        const arr = noZeroArr(teams)
+        if (arr.length === 2) {
+            const min = new Decimal(totalMoney).div(arr[1].rate).toFixed(2, Decimal.ROUND_DOWN)
+            return `${totalMoney} ≥ 当前值 ≥ ${min}`
+        }
         const maxDec = getCashPrize(teamArr[1])
         if (maxDec.isZero()) {
             return defaultContent
@@ -432,11 +483,13 @@ function App() {
             window.location.reload()
             return
         }
-        const tip = assignBtnTip.current as Instance<Props>
-        tip.disable()
+        // const tip = assignBtnTip.current as Instance<Props>
+        // tip.disable()
         setTotalMoney(100)
         setTeams({ ...cpTeams })
     }
+
+
 
     //核心分配算法，分配三个
     const assignMoney3 = () => {
@@ -465,53 +518,53 @@ function App() {
     }
 
     const assignMoney2 = (samll: Team, large: Team) => {
-        const a = large.rate
-        const b = samll.rate
-        // M ≥ A ≥ M(2-b)/(a-b)
-        const A = new Decimal(totalMoney).mul(new Decimal(2).sub(b)).div(new Decimal(a).sub(b))
-        const B = new Decimal(totalMoney).sub(A)
-        if (A.isFinite() || B.isFinite()) {
-            let moneyA = A.toNumber()
-            let moneyB = B.toNumber()
-            if (A.greaterThanOrEqualTo(totalMoney)) {
-                moneyA = totalMoney;
-            } else if (A.lessThanOrEqualTo(0)) {
-                moneyA = 1
-            }
-            if (B.greaterThanOrEqualTo(totalMoney)) {
-                moneyB = totalMoney - 1;
-            } else if (B.lessThanOrEqualTo(0)) {
-                moneyB = 1;
-            }
-            large.money = moneyA
-            samll.money = moneyB
-        } else {
-            large.money = new Decimal(totalMoney).div(2).toNumber()
-            samll.money = new Decimal(totalMoney).sub(large.money).toNumber()
+        /**
+         * a > b
+         * M ≥ A ≥ M/a
+         * M ≥ B ≥ M/b
+         */
+        const setf = (av: number, bv: number) => {
+            large.money = av
+            samll.money = bv
+            setTeams({ ...teams })
         }
 
-        setTeams({ ...teams })
+        const a = large.rate  //表示大的rate
+        const b = samll.rate  //表示小的rate
+        const half = new Decimal(totalMoney).div(2).toNumber() //一半的金额
+        if (a < b || a < 1) {
+            return setf(0, 0)
+        }
+        if (a === b) {
+            return setf(half, totalMoney - half)
+        }
+        const lessB = new Decimal(totalMoney).div(b).toNumber() //一定要优先算出B
+        const lessA = new Decimal(totalMoney).div(a).toNumber()
+        //A不能小于lessB
+
+        if (assignMod.current === 0) { //默认的，稳健型投资
+            assignModSwitch()
+            return setf(lessA, lessB)
+        } else if (assignMod.current === 1) { //高收益高风险
+            assignModSwitch()
+            return setf(totalMoney - lessB, lessB)
+        }
     }
 
     const assignMoney = () => {
         if (totalMoney < 1) return
-        const noZeroArr: Team[] = []
-        getTeamArr(teams).forEach((team) => {
-            if (team.money !== 0) {
-                noZeroArr.push(team)
-            }
-        })
-        const tip = assignBtnTip.current as Instance<Props>
+        const arr: Team[] = noZeroArr(teams)
+        // const tip = assignBtnTip.current as Instance<Props>
         //当2个都不为0时，执行2分配方案
-        if (noZeroArr.length === 2) {
-            tip.disable()
-            assignMoney2(noZeroArr[0], noZeroArr[1])
-        } else if (noZeroArr.length === 0) { //当全部都为0时，执行3分配方案
-            tip.disable()
+        if (arr.length === 2) {
+            // tip.disable()
+            assignMoney2(arr[0], arr[1])
+        } else if (arr.length === 0) { //当全部都为0时，执行3分配方案
+            // tip.disable()
             assignMoney3()
         } else {
-            tip.enable()
-            tip.show()
+            // tip.enable()
+            // tip.show()
         }
     }
 
@@ -525,9 +578,9 @@ function App() {
                     <div className='base-rules'>
                         <h3>核心规则</h3>
                         <ul>
-                            <li>Aa ≥ Bb ≥ Cc</li>
-                            <li>Cc ≥ Aa ≥ Bb</li>
-                            <li>Bb ≥ Cc ≥ Aa</li>
+                            <li>Aa &ge; Bb &ge; Cc</li>
+                            <li>Cc &ge; Aa &ge; Bb</li>
+                            <li>Bb &ge; Cc &ge; Aa</li>
                         </ul>
                         <h3>资金分配规则</h3>
                         <ul>
@@ -561,7 +614,9 @@ function App() {
                         <div className='tools-box'>
                             <div className='tools-grid'>
                                 <div className='reset'>
-                                    <button className='reset-btn' onClick={resetData}>reset</button>
+                                    <button className='reset-btn' onClick={resetData}>
+                                        reset
+                                    </button>
                                 </div>
                                 <div className='assign'>
                                     <button className='assign-btn' onClick={assignMoney}>
@@ -574,88 +629,7 @@ function App() {
 
                 </section>
                 <section className='content'>
-                    <h3>设</h3>
-                    <p>
-                        总预算：M
-                        <br />设金额：A={teams.A.name}，B={teams.B.name}，C={teams.C.name}
-                        <br /> 设赔率：a={teams.A.name}，b={teams.B.name}，c={teams.C.name}
-                    </p>
-
-                    <h3>方程式</h3>
-                    <p>
-                        如果{teams.A.name}：
-                        <br />① Aa - A - B - C ≥ 0<br />&nbsp;=&gt;&gt;&nbsp;  A(a-1) ≥ B + C
-                        <br /> 如果{teams.B.name}：
-                        <br /> ② Bb - A - B - C ≥ 0<br /> &nbsp;=&gt;&gt;&nbsp; B(b-1) ≥ A + C
-                        <br /> 如果{teams.C.name}：
-                        <br /> ③ Cc - A - B - C ≥ 0<br /> &nbsp;=&gt;&gt;&nbsp; C(c-1) ≥ A + B
-                        <br /> 总预算：
-                        <br /> ④ A + B + C = M
-                    </p>
-
-                    <h3>化简</h3>
-                    <p>
-                        将 ① - ② 得：
-                        ⑤ Aa ≥ Bb
-                        <br /> =&gt;&gt; A ≥ Bb/a
-                        <br /> =&gt;&gt;  Aa/b ≥ B
-                        <br /> 将 ② - ③ 得：
-                        ⑥ Bb ≥ Cc
-                        <br /> =&gt;&gt; B ≥ Cc/b
-                        <br /> =&gt;&gt;  Bb/c ≥ C
-                        <br /> 将 ③ - ① 得：
-                        ⑦ Cc ≥ Aa
-                        <br /> =&gt;&gt; C ≥ Aa/c
-                        <br /> =&gt;&gt;  Cc/a ≥ A
-                    </p>
-
-                    <h3>最终解</h3>
-                    <p>
-                        将 ⑤ 与 ⑥ 组合得：
-                        ⑧ Aa ≥ Bb ≥ Cc
-                        <br /> 将 ⑤ 与 ⑦ 组合得：
-                        ⑨ Cc ≥ Aa ≥ Bb
-                        <br /> 将 ⑥ 与 ⑦ 组合得：
-                        ⑩ Bb ≥ Cc ≥ Aa
-                    </p>
-
-                    <h3>求各注的金额</h3>
-                    <p>
-                        A + Aa/b + Aa/c = M
-                        <br /> Bb/a + B + Bb/c = M
-                        <br /> Cc/a + Cc/b + C = M
-                    </p>
-
-                    <h3>资金分配三注方案</h3>
-                    <p>
-                        A = M/(1 + a/b + a/c)
-                        <br />
-                        B = M/(b/a + 1 + b/c)
-                        <br />
-                        C = M/(c/a + c/b + 1)
-                    </p>
-
-                    <h3>资金分配两注方案</h3>
-                    <p>
-                        M = A + B
-                        <br />Aa - A - B ≥ 0 <br />  =&gt;&gt; Aa - A - M + A ≥ 0 <br /> =&gt;&gt; Aa ≥ M
-                        <br />
-                        <br />Bb - B - A ≥ 0 <br />  =&gt;&gt; Bb - B - M + B ≥ 0 <br /> =&gt;&gt; Bb ≥ M
-                        <br />
-                        <br />Aa + Bb ≥ 2M
-                        <br />Aa + Mb - Ab ≥ 2M
-                        <br />A(a-b) ≥ M(2-b)
-                        <br />
-                        <br />则: M ≥ A ≥ M(2-b)/(a-b)
-                        <br />
-                        <br />M - B ≥ M(2-b)/(a-b)
-                        <br /> 0  ≤ B ≤ M - M(2-b)/(a-b)
-                        <br />
-                        <br />则: 0  ≤ B ≤ A
-                    </p>
-
-                    <br />
-                    <br />
+                    <Article teams={teams} />
                 </section>
 
 

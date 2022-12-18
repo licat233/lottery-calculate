@@ -77,19 +77,22 @@ C = M/(c/a + c/b + 1)
 ## 同理，如果只分配2个
 ```
 M = A + B
-Aa - A - B ≥ 0  =>> Aa - A - M + A ≥ 0 =>> Aa ≥ M
-Bb - B - A ≥ 0  =>> Bb - B - M + B ≥ 0 =>> Bb ≥ M
+a > b
+A ≥ B
+M ≥ A
+Aa - A - B ≥ 0  =>> Aa - M ≥ 0 =>> Aa ≥ M
+Bb - B - A ≥ 0  =>> Bb - M ≥ 0 =>> Bb ≥ M
 
-Aa + Bb ≥ 2M  
-Aa + Mb - Ab ≥ 2M  
-A(a-b) ≥ M(2-b)  
+得：
+M ≥ A ≥ M/a
+M ≥ B ≥ M/b
 
-则: M ≥ A ≥ M(2-b)/(a-b)
+因为 a > b
+所以 A ≤ B
 
-M - B ≥ M(2-b)/(a-b) 
-0  ≤ B ≤ M - M(2-b)/(a-b)   
-
-则: 0  ≤ B ≤ A  
+其中:
+ A ≥ M/b
+ B ≥ M/a
 ```
 
 ## web
