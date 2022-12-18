@@ -132,24 +132,33 @@ const getTeamList = (teams: Teams): Team[] => {
     return teamList
 }
 
-const getUrlRateDate = (): number[] => {
-    const rateStr = getQueryVariable('rate')
-    if (rateStr === null) return []
-    try {
-        const arr: number[] = JSON.parse(rateStr);
-        return arr
-    } catch (error) {
-        return []
-    }
+const getUrlDate = (name: string): string[] => {
+    let str = getQueryVariable(name)
+    if (str === null) return []
+    str = str.replaceAll("[", "").replaceAll("]", "")
+    const arr = str.split(",");
+    return arr
+}
+
+const setTeamRate = (team: Team, rate: string) => {
+    const value = new Decimal(rate)
+    if (value.isNaN()) return
+    team.rate = value.toNumber()
 }
 
 const mergeInitData = (cacheData: CacheData | null) => {
     const defaultData = copyDefaultTeams();
-    const urlRateArr = getUrlRateDate();
+    const urlNameArr: string[] = getUrlDate('name');
+    if (urlNameArr.length !== 0) {
+        urlNameArr[0] && (defaultData.A.name = decodeURI(urlNameArr[0]))
+        urlNameArr[1] && (defaultData.B.name = decodeURI(urlNameArr[1]))
+        urlNameArr[2] && (defaultData.C.name = decodeURI(urlNameArr[2]))
+    }
+    const urlRateArr: string[] = getUrlDate('rate');
     if (urlRateArr.length !== 0) {
-        urlRateArr[0] && (defaultData.A.rate = urlRateArr[0])
-        urlRateArr[1] && (defaultData.B.rate = urlRateArr[1])
-        urlRateArr[2] && (defaultData.C.rate = urlRateArr[2])
+        urlRateArr[0] && setTeamRate(defaultData.A, urlRateArr[0])
+        urlRateArr[1] && setTeamRate(defaultData.B, urlRateArr[1])
+        urlRateArr[2] && setTeamRate(defaultData.C, urlRateArr[2])
         return { ...defaultData }
     }
     if (cacheData === null) return { ...defaultData }
@@ -454,7 +463,6 @@ function App() {
         const max = maxDec.div(teamArr[0].rate).toFixed(2, Decimal.ROUND_DOWN)
         return `${max} ≥ 当前值`
     }
-
 
     //设置当前input的提示内容
     const setTippyContent = (el: HTMLInputElement) => {
