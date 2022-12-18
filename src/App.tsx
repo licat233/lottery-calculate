@@ -6,6 +6,7 @@ import tippy, { Instance, Props } from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/animations/scale.css';
 import Article from './article';
+import { getQueryVariable } from './utils';
 
 const cacheKey = "data202212"
 const defaultContent = "请下注";
@@ -131,6 +132,31 @@ const getTeamList = (teams: Teams): Team[] => {
     return teamList
 }
 
+const getUrlRateDate = (): number[] => {
+    const rateStr = getQueryVariable('rate')
+    if (rateStr === null) return []
+    try {
+        const arr: number[] = JSON.parse(rateStr);
+        return arr
+    } catch (error) {
+        return []
+    }
+}
+
+const mergeInitData = (cacheData: CacheData | null) => {
+    const defaultData = copyDefaultTeams();
+    const urlRateArr = getUrlRateDate();
+    if (urlRateArr.length !== 0) {
+        urlRateArr[0] && (defaultData.A.rate = urlRateArr[0])
+        urlRateArr[1] && (defaultData.B.rate = urlRateArr[1])
+        urlRateArr[2] && (defaultData.C.rate = urlRateArr[2])
+        return { ...defaultData }
+    }
+    if (cacheData === null) return { ...defaultData }
+    if (!cacheData.teams) return { ...defaultData }
+    return { ...copyDefaultTeams(), ...cacheData.teams }
+}
+
 function App() {
     useEffect(() => {
         let sr = ScrollReveal({ reset: true });
@@ -138,8 +164,9 @@ function App() {
             sr.destroy()
         }
     })
-    const cacheData = getCacheData();
-    const initTeamsData: Teams = { ...copyDefaultTeams(), ...cacheData?.teams }
+
+    const cacheData = getCacheData()
+    const initTeamsData: Teams = mergeInitData(cacheData)
 
     const [teams, setTeams] = useState<Teams>(initTeamsData);
     const [totalMoney, setTotalMoney] = useState<number>(cacheData?.total || 100);
@@ -638,7 +665,7 @@ function App() {
             <footer className='footer'>
                 <p>
                     <a target="_blank" rel="noopener noreferrer" href="https://github.com/licat233/lottery-calculate" className="githubBtn">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="githubLogo" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="githubLogo" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
                         View on GitHub
                     </a>
                 </p>

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { getQueryVariable } from './utils';
 
 //屏蔽鼠标右键
 document.oncontextmenu = function () {
@@ -10,13 +11,14 @@ document.oncontextmenu = function () {
 };
 
 function UI() {
-  if (window.location.hash === '#development' || window.location.hash === '#dev') {
+  if (window.location.host === 'licat233.github.io') {
     return <App />
   }
-  if (window.location.host !== 'licat233.github.io') {
-    return <></>
+  const dev = getQueryVariable('dev')
+  if (dev !== null) {
+    return <App />
   }
-  return <App />
+  return <></>
 }
 
 const root = ReactDOM.createRoot(
