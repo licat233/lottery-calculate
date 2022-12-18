@@ -505,7 +505,7 @@ function App() {
 
     const resetData = () => {
         localStorage.removeItem(cacheKey);
-        const cpTeams = copyDefaultTeams()
+        const cpTeams = mergeInitData(null)
         if (cpTeams === defaultTeams) {
             window.location.reload()
             return
