@@ -302,6 +302,11 @@ td {
   font-size: 14px;
 }
 
+
+.footer p {
+  margin-bottom: 1rem;
+}
+
 ul {
   margin: 0 auto;
   max-width: 100%;
@@ -312,4 +317,27 @@ ul,
 li {
   list-style: none;
   width: 100%;
+}
+
+.githubBtn {
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.25s;
+  color: rgb(221, 221, 221);
+  margin: 0 8px 8px;
+  font-size: 16px;
+  font-weight: 500;
+  will-change: opacity;
+  cursor: pointer;
+}
+
+.githubLogo {
+  vertical-align: -7px;
+  margin-right: 8px;
+  width: 24px;
+  height: 24px;
+  color: rgb(212, 212, 212)
 }
