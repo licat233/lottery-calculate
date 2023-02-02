@@ -8,7 +8,8 @@ import 'tippy.js/animations/scale.css';
 import Article from './article';
 import { getQueryVariable } from './utils';
 
-const cacheKey = "data20230202"
+const cacheKey = "licatData";
+const currentCacheVersion = "2023.02.02";
 const defaultContent = "请下注";
 let idCounter = 0;
 
@@ -45,6 +46,9 @@ const getCacheData = (): CacheData | null => {
     if (!body) return null;
     try {
         const cacheData: CacheData = JSON.parse(body)
+        if(cacheData.version !== currentCacheVersion) {
+            throw new Error("Cache data version mismatch");
+        }
         return cacheData
     } catch (error) {
         localStorage.removeItem(cacheKey);
@@ -53,7 +57,7 @@ const getCacheData = (): CacheData | null => {
 }
 
 const setCacheData = (teams: Teams, total: number) => {
-    const cachedata: CacheData = { teams, total }
+    const cachedata: CacheData = { teams, total, version: currentCacheVersion }
     localStorage.setItem(cacheKey, JSON.stringify(cachedata))
 }
 

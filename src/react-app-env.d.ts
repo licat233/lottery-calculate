@@ -2,7 +2,7 @@
  * @Author: licat
  * @Date: 2022-12-15 15:22:35
  * @LastEditors: licat
- * @LastEditTime: 2023-02-02 15:06:29
+ * @LastEditTime: 2023-02-02 18:50:25
  * @Description: licat233@gmail.com
  */
 /// <reference types="react-scripts" />
@@ -27,4 +27,5 @@ interface CacheData {
     [key: string]: CacheTeams | number; //string类型的索引签名
     teams: Teams
     total: number;
+    version: string;
 }
