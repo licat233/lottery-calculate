@@ -8,7 +8,7 @@ import 'tippy.js/animations/scale.css';
 import Article from './article';
 import { getQueryVariable } from './utils';
 
-const cacheKey = "data202212"
+const cacheKey = "data20230202"
 const defaultContent = "请下注";
 let idCounter = 0;
 
