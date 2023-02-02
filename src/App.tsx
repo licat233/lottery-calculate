@@ -496,7 +496,7 @@ function App() {
         const id = el.dataset.id;
         if (!id) return
         teamArr.some((team, index) => {
-            const eq = id && team.id === id
+            const eq = team.id === id
             if (eq) {  //找出当前team对应的HTMLInputElement
                 let msg = ""
                 switch (true) {
@@ -553,6 +553,15 @@ function App() {
 
     //核心分配算法，分配三个
     const assignMoney3 = () => {
+        //特殊情况：如果三者rate相同
+        if (teams.A.rate === teams.B.rate && teams.B.rate === teams.C.rate) {
+            const avg = new Decimal(totalMoney).div(3).toNumber();
+            teams.A.money = avg
+            teams.B.money = avg
+            teams.C.money = avg
+            setTeams({ ...teams })
+            return
+        }
         const a_b = new Decimal(teams.A.rate).div(teams.B.rate)
         const a_c = new Decimal(teams.A.rate).div(teams.C.rate)
         const b_a = new Decimal(teams.B.rate).div(teams.A.rate)
@@ -582,7 +591,12 @@ function App() {
         //计算过程
         const teamA = largeRateTeam;
         const teamB = smallRateTeam;
-        if (assignCase === "avg") { 
+        //特殊情况：如果二者rate相同
+        if(teamA.rate === teamB.rate) {
+            const half = new Decimal(totalMoney).div(2).toNumber();
+            largeRateTeam.money = half
+            smallRateTeam.money = half;
+        }else if (assignCase === "avg") { 
             assignMode.current = "avg"
             //默认的，稳健型投资：表示无论结果如何，所得收益都不会亏，即大于等于 0 ，且两者收益持平，买哪方都能获得一样的收益
             //M/a ≤ M/b ≤ A ≤ B，算出 A 的最小值
