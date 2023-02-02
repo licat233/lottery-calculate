@@ -26,6 +26,7 @@ function NewTeam(index: number, name: string, money: number, rate: number): Team
         name,
         money,
         rate,
+        status: true,
     }
 }
 
@@ -56,14 +57,8 @@ const setCacheData = (teams: Teams, total: number) => {
     localStorage.setItem(cacheKey, JSON.stringify(cachedata))
 }
 
-const noZeroArr = (teams: Teams): Team[] => {
-    const arr: Team[] = []
-    getTeamArr(teams).forEach((team) => {
-        if (team.money !== 0) {
-            arr.push(team)
-        }
-    })
-    return arr
+const getValidTeams = (teams: Teams): Team[] => {
+    return getTeamArr(teams).filter(team => team.status);
 }
 
 //获取所有的消耗
@@ -78,7 +73,7 @@ const getAllCharge = (teams: Teams): Decimal => {
 
 //获取总收益
 const getAllProfit = (teams: Teams, team: Team): Decimal => {
-    const arr = noZeroArr(teams)
+    const arr = getValidTeams(teams)
     if (arr.length === 2) {
         const has = arr.some((_team) => {
             return _team.id === team.id
@@ -110,22 +105,33 @@ const copyDefaultTeams = (): Teams => {
     return defaultTeams;
 }
 
-const teams2Array = (teams: Teams): Team[] => {
+const teamsArray = (teams: Teams): Team[] => {
     return Object.keys(teams).map(key => {
         return teams[key]
     })
 }
 
+/**
+ * @description: 获取从小到大排列的，不管status=false的team
+ * @param {Teams} teams
+ * @return {Team[]}
+ */
 const getTeamArr = (teams: Teams): Team[] => {
-    const teamArr = teams2Array(teams)
+    const teamArr = teamsArray(teams).filter(team => team.status)
     teamArr.sort((a, b) => {
-        return new Decimal(a.rate).toNumber() - new Decimal(b.rate).toNumber()
+        return new Decimal(a.rate).toNumber() - new Decimal(b.rate).toNumber()// 从小到大排列
     })
     return teamArr
 }
 
+
+/**
+ * @description: 获取根据index正序排列的teams
+ * @param {Teams} teams
+ * @return {*}
+ */
 const getTeamList = (teams: Teams): Team[] => {
-    const teamList = teams2Array(teams)
+    const teamList = teamsArray(teams)
     teamList.sort((a, b) => {
         return a.index - b.index
     })
@@ -180,18 +186,19 @@ function App() {
     const [teams, setTeams] = useState<Teams>(initTeamsData);
     const [totalMoney, setTotalMoney] = useState<number>(cacheData?.total || 100);
     const totalRef = useRef<HTMLInputElement>(null);
+    const assignMode = useRef<"avg" | "max">("avg");
     // const assignBtnTip = useRef<any>(null);
 
     const tippyArr = useRef<Instance<Props>[]>([]);
 
-    const assignMod = useRef<number>(0)
-    const assignModSwitch = () => {
-        const modNum = 2 //总共有模式数量
-        assignMod.current += 1
-        if (assignMod.current === modNum) {
-            assignMod.current = 0
-        }
-    }
+    // const assignMod = useRef<number>(0)
+    // const assignModSwitch = () => {
+    //     const modNum = 2 //总共有模式数量
+    //     assignMod.current += 1
+    //     if (assignMod.current === modNum) {
+    //         assignMod.current = 0
+    //     }
+    // }
 
     let isFirstLoad = useRef<boolean>(true)
     useEffect(() => {
@@ -206,15 +213,6 @@ function App() {
             animation: 'scale',
             hideOnClick: false,
         });
-        // const assignBtnE = document.querySelector(".assign-btn");
-        // assignBtnE && (assignBtnTip.current = tippy(assignBtnE, {
-        //     // default
-        //     placement: "bottom",
-        //     arrow: true,
-        //     content: "请先reset表单数据",
-        //     animation: 'scale',
-        //     hideOnClick: false,
-        // }));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -245,7 +243,7 @@ function App() {
             el.value = new Decimal(num).toString()
             team.money = num
             //更改了当前，则其它也要变
-            const arr = noZeroArr(teams)
+            const arr = getValidTeams(teams)
             if (arr.length === 2) {
                 const otherTeam = arr.find((_team) => {
                     return _team.id !== team.id
@@ -338,6 +336,19 @@ function App() {
         }
         el.value = new Decimal(num).toString()
         setTotalMoney(num)
+        // assignMoney(assignMode.current);
+    }
+
+    const switchTeamStatus = (e: any) => {
+        let el = e.target;
+        let team = findTeam(el.dataset.teamid);
+        if (!team) return
+        let status = !team.status;
+        el.dataset.status = status;
+        team.money = 0;
+        team.status = status
+        setTeams({ ...teams });
+        assignMoney(assignMode.current);
     }
 
     const renderRate = (team: Team) => {
@@ -371,15 +382,25 @@ function App() {
     }
 
     const renderTeams = () => {
-        return getTeamList(teams).map((team, index) => {
-            const toatlProfit = getAllProfit(teams, team)
+        return getTeamList(teams).map((team: Team, index: number) => {
+            const status = team.status;
+            let casePrize = "0.00";
+            let profit = "0.00";
+            let totalProfit = "0.00";
+            let wrong = false
+            if (status) {
+                casePrize = getCashPrize(team).toFixed(2, Decimal.ROUND_DOWN);
+                profit = getProfit(team).toFixed(2, Decimal.ROUND_DOWN);
+                totalProfit = getAllProfit(teams, team).toFixed(2, Decimal.ROUND_DOWN);
+                wrong = new Decimal(totalProfit).isNegative()
+            }
             return <tr key={"team-" + index}>
-                <td>{team.name}</td>
+                <td onClick={(e) => { switchTeamStatus(e) }} data-status={status} data-teamid={team.id}>{team.name}</td>
                 {renderRate(team)}
                 {renderMoney(team)}
-                <td><div>{getCashPrize(team).toFixed(2, Decimal.ROUND_DOWN)}</div></td>
-                <td><div>{getProfit(team).toFixed(2, Decimal.ROUND_DOWN)} </div></td>
-                <td><div>{toatlProfit.toFixed(2, Decimal.ROUND_DOWN)}</div></td>
+                <td><div>{casePrize}</div></td>
+                <td><div>{profit}</div></td>
+                <td><div data-wrong={wrong}>{totalProfit}</div></td>
             </tr>
         })
     }
@@ -387,7 +408,7 @@ function App() {
     const renderTotal = () => {
         const value = new Decimal(totalMoney || 0).toFixed(2, Decimal.ROUND_DOWN)
         return <tr className='ttotal'>
-            <td>总金额</td>
+            <td>总金额 💰</td>
             <td colSpan={5}><div onClick={(e) => { showInput(e.currentTarget) }}>
                 {value}
                 <input type="number" maxLength={10} max={100000} ref={totalRef} data-name="total"
@@ -430,7 +451,7 @@ function App() {
     }
 
     const getMidContent = (teamArr: Team[]) => {
-        const arr = noZeroArr(teams)
+        const arr = getValidTeams(teams)
         if (arr.length === 2) {
             const min = new Decimal(totalMoney).div(arr[0].rate).toFixed(2, Decimal.ROUND_DOWN)
             return `${totalMoney} ≥ 当前值 ≥ ${min}`
@@ -451,7 +472,7 @@ function App() {
     }
 
     const getMinContent = (teamArr: Team[]) => {
-        const arr = noZeroArr(teams)
+        const arr = getValidTeams(teams)
         if (arr.length === 2) {
             const min = new Decimal(totalMoney).div(arr[1].rate).toFixed(2, Decimal.ROUND_DOWN)
             return `${totalMoney} ≥ 当前值 ≥ ${min}`
@@ -552,54 +573,54 @@ function App() {
         setTeams({ ...teams })
     }
 
-    const assignMoney2 = (samll: Team, large: Team) => {
-        /**
-         * a > b
-         * M ≥ A ≥ M/a
-         * M ≥ B ≥ M/b
-         */
-        const setf = (av: number, bv: number) => {
-            large.money = av
-            samll.money = bv
-            setTeams({ ...teams })
+    //核心分配算法，分配两个
+    const assignMoney2 = (smallRateTeam: Team, largeRateTeam: Team, assignCase: "avg" | "max") => {
+        //计算过程
+        const teamA = largeRateTeam;
+        const teamB = smallRateTeam;
+        if (assignCase === "avg") { 
+            assignMode.current = "avg"
+            //默认的，稳健型投资：表示无论结果如何，所得收益都不会亏，即大于等于 0 ，且两者收益持平，买哪方都能获得一样的收益
+            //M/a ≤ M/b ≤ A ≤ B，算出 A 的最小值
+            //M/a ≤ M/b ≤ B ≤ M，算出 B 的最小值
+            const moneyA = new Decimal(totalMoney).div(teamA.rate).toNumber(); 
+            const moneyB = new Decimal(totalMoney).div(teamB.rate).toNumber();
+            largeRateTeam.money = moneyA
+            smallRateTeam.money = moneyB;
+        }else if (assignCase === "max"){ 
+            assignMode.current = "max"
+            //高收益高风险，收益最高的投资：只要不亏钱，竟可能的获得更多收益
+            const moneyA = new Decimal(totalMoney).div(teamA.rate).toNumber(); //A 要取最小值，不亏本的情况下
+            const moneyB = new Decimal(totalMoney).sub(moneyA).toNumber(); //余额全部给 B，最大化 B 投资
+            largeRateTeam.money = moneyA
+            smallRateTeam.money = moneyB;
         }
-
-        const a = large.rate  //表示大的rate
-        const b = samll.rate  //表示小的rate
-        const half = new Decimal(totalMoney).div(2).toNumber() //一半的金额
-        if (a < b || a < 1) {
-            return setf(0, 0)
-        }
-        if (a === b) {
-            return setf(half, totalMoney - half)
-        }
-        const lessB = new Decimal(totalMoney).div(b).toNumber() //一定要优先算出B
-        const lessA = new Decimal(totalMoney).div(a).toNumber()
-        //A不能小于lessB
-
-        if (assignMod.current === 0) { //默认的，稳健型投资
-            assignModSwitch()
-            return setf(lessA, lessB)
-        } else if (assignMod.current === 1) { //高收益高风险
-            assignModSwitch()
-            return setf(totalMoney - lessB, lessB)
-        }
+        setTeams({ ...teams });
+        return
     }
 
-    const assignMoney = () => {
+    //核心分配算法，分配一个
+    const assignMoney1 = (team: Team) => {
+        team.money = totalMoney;
+        setTeams({ ...teams })
+    }
+
+    const assignMoney = (model: "avg" | "max" | undefined) => {
         if (totalMoney < 1) return
-        const arr: Team[] = noZeroArr(teams)
-        // const tip = assignBtnTip.current as Instance<Props>
-        //当2个都不为0时，执行2分配方案
-        if (arr.length === 2) {
-            // tip.disable()
-            assignMoney2(arr[0], arr[1])
-        } else if (arr.length === 0) { //当全部都为0时，执行3分配方案
-            // tip.disable()
-            assignMoney3()
-        } else {
-            // tip.enable()
-            // tip.show()
+        const modelValue = model ?? assignMode.current;
+        assignMode.current = modelValue;
+        const arr: Team[] = getTeamArr(teams)
+        switch (arr.length) {
+            case 3:
+                assignMoney3(); //由于3方案必然存在亏损情况，所以无论是稳健收益还是最大收益算法，都只有一种分配方案
+                break;
+            case 2:
+                assignMoney2(arr[0], arr[1], modelValue)
+                break;
+            case 1:
+                assignMoney1(arr[0])
+                break;
+            default:
         }
     }
 
@@ -625,6 +646,11 @@ function App() {
                         </ul>
                         <div className='line'></div>
                     </div>
+                    <div className='reset'>
+                        <button className='reset-btn' onClick={resetData}>
+                            reset
+                        </button>
+                    </div>
                     <div className='table-box'>
                         <table className='App-body-table'>
                             <thead>
@@ -648,26 +674,23 @@ function App() {
                     <div className='tools'>
                         <div className='tools-box'>
                             <div className='tools-grid'>
-                                <div className='reset'>
-                                    <button className='reset-btn' onClick={resetData}>
-                                        reset
+                                <div className='assign'>
+                                    <button className='assign-btn' onClick={(e) => { assignMoney("avg") }}>
+                                        稳健收益
                                     </button>
                                 </div>
                                 <div className='assign'>
-                                    <button className='assign-btn' onClick={assignMoney}>
-                                        assign
+                                    <button className='assign-btn' onClick={(e) => { assignMoney("max") }}>
+                                        最大收益
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
-
                 </section>
                 <section className='content'>
                     <Article teams={teams} />
                 </section>
-
-
             </article>
 
             <footer className='footer'>

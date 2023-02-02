@@ -1,3 +1,10 @@
+/*
+ * @Author: licat
+ * @Date: 2022-12-18 16:32:47
+ * @LastEditors: licat
+ * @LastEditTime: 2023-02-02 18:21:00
+ * @Description: licat233@gmail.com
+ */
 
 type ArticleProps = {
     teams: Teams;
@@ -70,9 +77,8 @@ const Article: React.FC<ArticleProps> = (props) => {
         <h3>资金分配两注方案</h3>
         <p>
             <br />M = A + B
-            <br />a &gt; b
-            <br />A ≥ B
-            <br />M ≥ A
+            <br />
+            <br />确保无论下注哪个，都不会亏本
             <br />Aa - M ≥ 0 =&gt;&gt; Aa ≥ M
             <br />Bb - M ≥ 0 =&gt;&gt; Bb ≥ M
             <br />
@@ -80,13 +86,16 @@ const Article: React.FC<ArticleProps> = (props) => {
             <br />M ≥ A ≥ M/a
             <br />M ≥ B ≥ M/b
             <br />
-            <br />因为 a &gt; b
+            <br />设 a ≥ b
+            <br />则 M/a ≤ M/b
             <br />所以 A ≤ B
             <br />
-            <br />其中:
-            <br />A ≥ M/b
-            <br />B ≥ M/a
+            <br />结果:
+            <br />M/a ≤ M/b ≤ A ≤ B 
+            <br />M/a ≤ M/b ≤ B ≤ M
         </p>
+
+        <h3>总结：赔率相对较大的，其下注金额相对较小</h3>
 
         <br />
         <br />

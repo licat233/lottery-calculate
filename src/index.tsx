@@ -1,3 +1,10 @@
+/*
+ * @Author: licat
+ * @Date: 2022-12-15 15:22:22
+ * @LastEditors: licat
+ * @LastEditTime: 2023-02-02 18:41:39
+ * @Description: licat233@gmail.com
+ */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';

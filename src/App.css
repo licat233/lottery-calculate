@@ -1,5 +1,10 @@
 :root {
   --content-max-width: 600px;
+  --normal-color:#61dafb;
+  --normal-light-color:#e0f8ff;
+  --warn-color: #fbc2619c;
+  --warn-light-color: #fff1d9;
+  --wrong-color: red;
 }
 
 .App {
@@ -30,7 +35,7 @@
 }
 
 .App-link {
-  color: #61dafb;
+  color: var(--normal-color);
 }
 
 @keyframes App-logo-spin {
@@ -66,7 +71,7 @@
   border-bottom: 1px solid rgb(182, 182, 182);
   text-align: left;
   height: 1px;
-  margin-bottom: 40px;
+  margin-bottom: 1rem;
 }
 
 .base-rules h3 {
@@ -81,8 +86,8 @@
   -moz-border-radius: 3px;
   -ms-border-radius: 3px;
   -o-border-radius: 3px;
-  border: 1px solid #61dafb;
-  color: #61dafb;
+  border: 1px solid var(--normal-color);
+  color: var(--normal-color);
   transition: .2s;
   -webkit-transition: .2s;
   -moz-transition: .2s;
@@ -90,7 +95,7 @@
   -o-transition: .2s;
   background-color: #282c34;
   font-size: 16px;
-  box-shadow: 0 0 3px 0px #61dafb;
+  box-shadow: 0 0 3px 0px var(--normal-color);
 }
 
 .base-rules div button:active {
@@ -100,7 +105,7 @@
   -ms-transform: scale(.9);
   -o-transform: scale(.9);
   border: 1px solid #ffffff;
-  box-shadow: 0 0 4px 1px #61dafb;
+  box-shadow: 0 0 4px 1px var(--normal-color);
 }
 
 .text-align-left {
@@ -127,6 +132,7 @@
   border-collapse: collapse;
   box-sizing: border-box;
   text-align: center;
+  cursor: pointer;
 }
 
 .App-body-table,
@@ -142,6 +148,33 @@ td {
   border-bottom: 1px solid;
   height: 30px;
   line-height: 30px;
+}
+
+.App-body-table tbody tr td:first-child{
+  cursor: pointer;
+  user-select: none;
+}
+
+.App-body-table tbody tr td[data-status=true] {
+  background-color: var(--normal-light-color);
+}
+
+.App-body-table tbody tr td[data-status=false] {
+  background-color: var(--warn-light-color);
+}
+
+.App-body-table tbody td[data-status=true]::after {
+  content: " ✅";
+  font-size: small;
+}
+
+.App-body-table tbody td[data-status=false]::after {
+  content: " 🚫";
+  font-size: small;
+}
+
+.App-body-table tbody tr td div[data-wrong=true] {
+  color: var(--wrong-color);
 }
 
 .App-body-table tbody tr {
@@ -228,7 +261,7 @@ td {
 
 
 .App-body-table td div input:focus {
-  outline: #61dafb solid 1px !important;
+  outline: var(--normal-color) solid 1px !important;
 }
 
 .tools {
@@ -245,12 +278,20 @@ td {
   grid-template-columns: 1fr 1fr;
 }
 
-.reset,
+.reset{
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
 .assign {
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 0;
+  margin-bottom: 1rem;
 }
 
 .assign-btn,
@@ -266,8 +307,8 @@ td {
   -moz-border-radius: 5px;
   -ms-border-radius: 5px;
   -o-border-radius: 5px;
-  background-color: #61dafb;
-  box-shadow: 0 0 5px 0 #61dafb;
+  background-color: var(--normal-color);
+  box-shadow: 0 0 5px 0 var(--normal-color);
   border: 1px solid #fff;
   transition: all .2s;
   -webkit-transition: all .2s;
@@ -280,7 +321,26 @@ td {
   cursor: pointer;
 }
 
-.assign-btn:active,
+.reset-btn {
+width: 60px;
+height: 26px;
+background-color: var(--warn-color);
+box-shadow: 0 0 5px 0 var(--warn-color);
+}
+
+.assign-btn:active {
+  transform: scale(.9);
+  -webkit-transform: scale(.9);
+  -moz-transform: scale(.9);
+  -ms-transform: scale(.9);
+  -o-transform: scale(.9);
+  /* border: unset;
+  box-shadow: unset; */
+  color: #fff;
+  border: 2px solid #fff;
+  box-shadow: 0 0 20px 20px var(--normal-color)70;
+}
+
 .reset-btn:active {
   transform: scale(.9);
   -webkit-transform: scale(.9);
@@ -291,7 +351,8 @@ td {
   box-shadow: unset; */
   color: #fff;
   border: 2px solid #fff;
-  box-shadow: 0 0 20px 20px #61dafb70;
+  box-shadow: 0 0 10px 10px var(--warn-color);
+  background-color: var(--warn-color);
 }
 
 .footer {

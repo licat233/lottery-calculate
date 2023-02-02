@@ -1,3 +1,10 @@
+<!--
+ * @Author: licat
+ * @Date: 2022-12-15 15:22:22
+ * @LastEditors: licat
+ * @LastEditTime: 2023-02-02 18:24:00
+ * @Description: licat233@gmail.com
+-->
 # 彩票计算 - lottery calculate
 
 ## 设
@@ -77,23 +84,26 @@ C = M/(c/a + c/b + 1)
 ## 同理，如果只分配2个
 ```
 M = A + B
-a > b
-A ≥ B
-M ≥ A
-Aa - A - B ≥ 0  =>> Aa - M ≥ 0 =>> Aa ≥ M
-Bb - B - A ≥ 0  =>> Bb - M ≥ 0 =>> Bb ≥ M
+
+确保无论下注哪个，都不会亏本
+Aa - A - B ≥ 0  =>> Aa - M ≥ 0 =>> Aa ≥ M  
+Bb - B - A ≥ 0  =>> Bb - M ≥ 0 =>> Bb ≥ M  
 
 得：
-M ≥ A ≥ M/a
-M ≥ B ≥ M/b
+M ≥ A ≥ M/a  
+M ≥ B ≥ M/b  
 
-因为 a > b
-所以 A ≤ B
+设：a ≥ b  
+则 M/a ≤ M/b  
+所以 A ≤ B  
 
-其中:
- A ≥ M/b
- B ≥ M/a
+
+结果:
+M/a ≤ M/b ≤ A ≤ B  
+M/a ≤ M/b ≤ B ≤ M  
 ```
+
+## 结论：赔率相对较大的，其下注金额相对较小
 
 ## web
 <https://licat233.github.io/lottery-calculate/index.html>
