@@ -2,31 +2,19 @@
  * @Author: licat
  * @Date: 2022-12-15 15:22:22
  * @LastEditors: licat
- * @LastEditTime: 2023-02-02 18:41:39
- * @Description: licat233@gmail.com
+ * @LastEditTime: 2026-11-27
+ * @Description: lottery calculate entry
  */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { getQueryVariable } from './utils';
 
-//屏蔽鼠标右键
+// Disable the browser context menu.
 document.oncontextmenu = function () {
   return false;
 };
-
-function UI() {
-  if (window.location.host === 'licat233.github.io') {
-    return <App />
-  }
-  const dev = getQueryVariable('dev')
-  if (dev !== null) {
-    return <App />
-  }
-  return <></>
-}
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -34,11 +22,8 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <UI />
+    <App />
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
